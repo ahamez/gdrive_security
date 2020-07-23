@@ -10,7 +10,7 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :xomium_web, XomiumWeb.Endpoint,
-  url: [host: "example.com", port: 80],
+  url: [host: "xomium.com", port: 443],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # ## SSL Support
@@ -42,8 +42,7 @@ config :xomium_web, XomiumWeb.Endpoint,
 # We also recommend setting `force_ssl` in your endpoint, ensuring
 # no data is ever sent via http, always redirecting to https:
 #
-#     config :xomium_web, XomiumWeb.Endpoint,
-#       force_ssl: [hsts: true]
+config :xomium_web, XomiumWeb.Endpoint, force_ssl: [hsts: true]
 #
 # Check `Plug.SSL` for all available options in `force_ssl`.
 

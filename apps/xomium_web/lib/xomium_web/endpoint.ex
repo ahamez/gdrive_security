@@ -1,5 +1,6 @@
 defmodule XomiumWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :xomium_web
+  use SiteEncrypt.Phoenix
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -51,4 +52,35 @@ defmodule XomiumWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug XomiumWeb.Router
+
+  @impl SiteEncrypt
+  def certification() do
+    SiteEncrypt.configure(
+      # client: :native,
+      client: :certbot,
+
+      domains: ["xomium.com"],
+      emails: ["contact@xomium.com"],
+
+      db_folder: Application.app_dir(:xomium_web, Path.join(~w/priv site_encrypt/)),
+
+      directory_url:
+        case System.get_env("SERVER_MODE", "local") do
+          "local" -> {:internal, port: 4002}
+          "staging" -> "https://acme-staging-v02.api.letsencrypt.org/directory"
+          "production" -> "https://acme-v02.api.letsencrypt.org/directory"
+        end
+    )
+  end
+
+  @impl Phoenix.Endpoint
+  def init(_key, config) do
+    {
+      :ok,
+      SiteEncrypt.Phoenix.configure_https(config, port: 443)
+      # config
+      # |> SiteEncrypt.Phoenix.configure_https(port: 4001)
+      # |> Keyword.merge(http: [port: 80])
+    }
+  end
 end
