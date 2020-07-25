@@ -10,8 +10,7 @@ defmodule XomiumWeb.Application do
       # Start the Telemetry supervisor
       XomiumWeb.Telemetry,
       # Start the Endpoint (http/https)
-      # XomiumWeb.Endpoint
-      {SiteEncrypt.Phoenix, XomiumWeb.Endpoint}
+      XomiumWeb.Endpoint
       # Start a worker by calling: XomiumWeb.Worker.start_link(arg)
       # {XomiumWeb.Worker, arg}
     ]
