@@ -10,7 +10,7 @@ use Mix.Config
 # which you should run after static files are built and
 # before starting your production server.
 config :xomium_web, XomiumWeb.Endpoint,
-  url: [host: "xomium.com", port: 8080],
+  url: [host: "xomium.com", port: 4000],
   cache_static_manifest: "priv/static/cache_manifest.json"
 
 # ## SSL Support
