@@ -1,0 +1,8 @@
+# as per recommanded by https://hub.docker.com/r/bitwalker/alpine-elixir-phoenix
+# and https://codefresh.io/docker-tutorial/not-ignore-dockerignore-2/
+_build
+deps
+apps/xomium_web/assets/node_modules
+test
+.git
+*.md
