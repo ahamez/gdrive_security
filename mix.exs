@@ -22,7 +22,12 @@ defmodule Xomium.Umbrella.MixProject do
   end
 
   defp deps do
-    []
+    [
+      {:credo, "~> 1.4", only: [:test, :dev], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:test, :dev], runtime: false},
+      {:excoveralls, "~> 0.13", only: [:test], runtime: false},
+      {:git_hooks, "~> 0.5", only: [:test, :dev], runtime: false}
+    ]
   end
 
   defp aliases do
