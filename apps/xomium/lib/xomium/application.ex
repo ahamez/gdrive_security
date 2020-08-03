@@ -6,7 +6,7 @@ defmodule Xomium.Application do
   def start(_type, _args) do
     children = [
       # Start the Ecto repository
-      # Xomium.Repo,
+      Xomium.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Xomium.PubSub}
       # Start a worker by calling: Xomium.Worker.start_link(arg)
