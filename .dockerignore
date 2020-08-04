@@ -6,3 +6,4 @@ apps/xomium_web/assets/node_modules
 test
 .git
 *.md
+*.pem

@@ -2,7 +2,7 @@ defmodule Xomium.GoogleJwtTest do
   use ExUnit.Case, async: true
 
   # Generated with `openssl genrsa -out private.pem 2048`
-  @sk_dem """
+  @secret_key_dem """
   -----BEGIN RSA PRIVATE KEY-----
   MIIEowIBAAKCAQEA0YM0ZNUcRCfPVMuCSD/XAL2txPN1sd5E9xpw/V7R+hF2WpAM
   rDrZPcp30tezty/ZhXmH2rAGNCYw57jYw4M45Z8Djf12XjgkIjTahyD+28LqQ2R6
@@ -33,7 +33,7 @@ defmodule Xomium.GoogleJwtTest do
   """
 
   # Generated with `openssl rsa -in private.pem -out public.pem -outform PEM -pubout`
-  @pk_dem """
+  @public_key_dem """
   -----BEGIN PUBLIC KEY-----
   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0YM0ZNUcRCfPVMuCSD/X
   AL2txPN1sd5E9xpw/V7R+hF2WpAMrDrZPcp30tezty/ZhXmH2rAGNCYw57jYw4M4
@@ -46,6 +46,12 @@ defmodule Xomium.GoogleJwtTest do
   """
 
   test "make/5 generates a valid JWT" do
+    [encoded_secret_key] = :public_key.pem_decode(@secret_key_dem)
+    secret_key = :public_key.pem_entry_decode(encoded_secret_key)
+
+    [enc_public_key] = :public_key.pem_decode(@public_key_dem)
+    public_key = :public_key.pem_entry_decode(enc_public_key)
+
     iss = "foo@example.iam.gserviceaccount.com"
 
     scopes = [
@@ -58,7 +64,7 @@ defmodule Xomium.GoogleJwtTest do
 
     sub = "bar@example.com"
 
-    jwt = Xomium.GoogleJwt.make(@sk_dem, iss, scopes, ttl, sub)
+    jwt = Xomium.GoogleJwt.make(secret_key, iss, scopes, ttl, sub)
     assert [header64, claim64, sig64] = String.split(jwt, ".")
 
     # Header never changes
@@ -76,8 +82,7 @@ defmodule Xomium.GoogleJwtTest do
 
     # Test signature validity
     {:ok, sig} = Base.url_decode64(sig64)
-    [enc_pkey] = :public_key.pem_decode(@pk_dem)
-    pkey = :public_key.pem_entry_decode(enc_pkey)
-    assert :public_key.verify("#{header64}.#{claim64}", :sha256, sig, pkey)
+
+    assert :public_key.verify("#{header64}.#{claim64}", :sha256, sig, public_key)
   end
 end

@@ -20,3 +20,6 @@ config :xomium_web, XomiumWeb.Endpoint,
 
 # Print only warnings and errors during test
 config :logger, level: :warn
+
+config :xomium,
+  google_secret_pem_path: "google_secret.pem"

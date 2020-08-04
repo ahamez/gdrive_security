@@ -33,6 +33,10 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :xomium,
+  google_secret_pem_path: {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH"}
+
+# Configure git hooks
 if Mix.env() != :prod do
   config :git_hooks,
     auto_install: true,

@@ -4,15 +4,26 @@ defmodule Xomium.Application do
   use Application
 
   def start(_type, _args) do
+    conf = configure()
+
     children = [
-      # Start the Ecto repository
       Xomium.Repo,
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Xomium.PubSub}
-      # Start a worker by calling: Xomium.Worker.start_link(arg)
-      # {Xomium.Worker, arg}
+      {Phoenix.PubSub, name: Xomium.PubSub},
+      {Xomium.Secrets, [google_secret_pem_path: conf.google_secret_pem_path, name: :secrets]}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xomium.Supervisor)
+  end
+
+  defp configure() do
+    google_secret_pem_path =
+      case Application.get_env(:xomium, :google_secret_pem_path) do
+        {:env, var} -> System.fetch_env!(var)
+        google_secret_pem_path -> google_secret_pem_path
+      end
+
+    %{
+      google_secret_pem_path: google_secret_pem_path
+    }
   end
 end

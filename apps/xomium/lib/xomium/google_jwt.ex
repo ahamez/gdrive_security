@@ -7,24 +7,21 @@ defmodule Xomium.GoogleJwt do
 
   @doc """
   ## Parameters
-  - pk_dem: private key in DEM format (provided by Google)
+  - secret_key: private key (provided by Google)
   - iss: issuer (provided by Google)
   - scope: list of Google scopes (https://developers.google.com/identity/protocols/oauth2/scopes)
-  - ttl: time to live given in seconds, O <= ttl <= 3600
+  - ttl: time to live given in seconds, 0 <= ttl <= 3600
   - sub: the Google email address of the account to impersonate
   """
-  @spec make(binary(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
-  def make(pk_dem, iss, scopes, ttl, sub) when ttl <= 3600 do
+  @spec make(tuple(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
+  def make(secret_key, iss, scopes, ttl, sub) when ttl <= 3600 do
     claim64 = make_claim(iss, scopes, ttl, sub) |> Jason.encode!() |> Base.url_encode64()
-
-    [encoded_pk] = :public_key.pem_decode(pk_dem)
-    pk = :public_key.pem_entry_decode(encoded_pk)
 
     content = "#{@header64}.#{claim64}"
 
     sig64 =
       content
-      |> :public_key.sign(:sha256, pk)
+      |> :public_key.sign(:sha256, secret_key)
       |> Base.url_encode64()
 
     "#{content}.#{sig64}"
