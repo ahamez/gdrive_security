@@ -2,7 +2,7 @@ defmodule Xomium.GoogleJwtTest do
   use ExUnit.Case, async: true
 
   # Generated with `openssl genrsa -out private.pem 2048`
-  @pk_dem """
+  @sk_dem """
   -----BEGIN RSA PRIVATE KEY-----
   MIIEowIBAAKCAQEA0YM0ZNUcRCfPVMuCSD/XAL2txPN1sd5E9xpw/V7R+hF2WpAM
   rDrZPcp30tezty/ZhXmH2rAGNCYw57jYw4M45Z8Djf12XjgkIjTahyD+28LqQ2R6
@@ -32,7 +32,20 @@ defmodule Xomium.GoogleJwtTest do
   -----END RSA PRIVATE KEY-----
   """
 
-  test "make/5 generates a JWT" do
+  # Generated with `openssl rsa -in private.pem -out public.pem -outform PEM -pubout`
+  @pk_dem """
+  -----BEGIN PUBLIC KEY-----
+  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0YM0ZNUcRCfPVMuCSD/X
+  AL2txPN1sd5E9xpw/V7R+hF2WpAMrDrZPcp30tezty/ZhXmH2rAGNCYw57jYw4M4
+  5Z8Djf12XjgkIjTahyD+28LqQ2R6eB13HaWc9rG8lG/ztL/V/W5j47oXT5NL6t9k
+  WrG9ZJPl2ZOeKTVUrYd6tqIxcfAEoEavsITydu7vNCsf/sls4096I5JP/QCdb/Sx
+  M3IfyU1sq3xxk3jOPbJEydyEmxBmry2FiOgseBePee/llOKPJHJPZZW8fj71g7ku
+  k9Ii5twRlkn7Jnx/XXN+gQYaNjv1bDrsvhrzHb7vgt6gqYI4chfgsbmT2rmiaQga
+  2QIDAQAB
+  -----END PUBLIC KEY-----
+  """
+
+  test "make/5 generates a valid JWT" do
     iss = "foo@example.iam.gserviceaccount.com"
 
     scopes = [
@@ -45,16 +58,26 @@ defmodule Xomium.GoogleJwtTest do
 
     sub = "bar@example.com"
 
-    jwt = Xomium.GoogleJwt.make(@pk_dem, iss, scopes, ttl, sub)
+    jwt = Xomium.GoogleJwt.make(@sk_dem, iss, scopes, ttl, sub)
     assert [header64, claim64, sig64] = String.split(jwt, ".")
 
-    # Header never changes: %{"alg" => "RS256", "typ" => "JWT"}
-    assert header64 == "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9"
+    # Header never changes
+    assert header64 |> Base.url_decode64!() |> Jason.decode!() == %{
+             "alg" => "RS256",
+             "typ" => "JWT"
+           }
 
+    # Test claim contents
     assert {:ok, claim_json} = Base.url_decode64(claim64)
     assert {:ok, claim} = Jason.decode(claim_json)
     assert claim["iss"] == iss
     assert claim["scope"] == Enum.join(scopes, " ")
     assert claim["sub"] == "bar@example.com"
+
+    # Test signature validity
+    {:ok, sig} = Base.url_decode64(sig64)
+    [enc_pkey] = :public_key.pem_decode(@pk_dem)
+    pkey = :public_key.pem_entry_decode(enc_pkey)
+    assert :public_key.verify("#{header64}.#{claim64}", :sha256, sig, pkey)
   end
 end
