@@ -52,4 +52,6 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix, :stacktrace_depth, 20
 
 config :xomium,
-  google_secret_pem_path: "google_secret.pem"
+  google_secret_pem_path: Path.expand("../google_secret.pem", __DIR__)
+
+config :xomium, dir: __DIR__

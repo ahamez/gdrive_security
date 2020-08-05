@@ -22,4 +22,4 @@ config :xomium_web, XomiumWeb.Endpoint,
 config :logger, level: :warn
 
 config :xomium,
-  google_secret_pem_path: "google_secret.pem"
+  google_secret_pem_path: Path.expand("../apps/xomium/test/test_secret_pem.txt", __DIR__)
