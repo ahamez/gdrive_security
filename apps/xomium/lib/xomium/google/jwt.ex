@@ -1,4 +1,4 @@
-defmodule Xomium.GoogleJwt do
+defmodule Xomium.Google.Jwt do
   @moduledoc """
   See https://developers.google.com/identity/protocols/oauth2/service-account#httprest.
   """
