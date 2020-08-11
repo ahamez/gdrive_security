@@ -8,8 +8,9 @@ defmodule Xomium.Application do
 
     children = [
       Xomium.Repo,
-      {Phoenix.PubSub, name: Xomium.PubSub},
-      {Xomium.Secrets, [google_secret_pem_path: conf.google_secret_pem_path, name: :secrets]}
+      {Phoenix.PubSub, [name: Xomium.PubSub]},
+      {Xomium.Secrets, [name: :secrets, google_secret_pem_path: conf.google_secret_pem_path]},
+      {Xomium.HttpRequest, [name: :google_api, host: conf.google_api_url]}
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xomium.Supervisor)
@@ -22,8 +23,11 @@ defmodule Xomium.Application do
         google_secret_pem_path -> google_secret_pem_path
       end
 
+    google_api_url = Application.get_env(:xomium, :google_api_url)
+
     %{
-      google_secret_pem_path: google_secret_pem_path
+      google_secret_pem_path: google_secret_pem_path,
+      google_api_url: google_api_url
     }
   end
 end
