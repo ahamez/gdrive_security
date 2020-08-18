@@ -42,8 +42,9 @@ if Mix.env() != :prod do
         verbose: false,
         tasks: [
           {:cmd, "mix credo"},
-          {:cmd, "mix dialyzer"},
-          {:cmd, "mix test"}
+          {:cmd, "mix dialyzer"}
+          # TODO
+          # {:cmd, "mix test"}
         ]
       ]
     ]

@@ -1,4 +1,4 @@
-defmodule Xomium.HttpRequest do
+defmodule Xomium.HttpRequestServer do
   @moduledoc false
 
   use GenServer
@@ -8,31 +8,24 @@ defmodule Xomium.HttpRequest do
             conn: nil,
             requests: %{}
 
-  def start_link(opts) do
-    {name, opts} = Keyword.pop!(opts, :name)
-    GenServer.start_link(__MODULE__, opts, name: name)
+  def start_link(host) do
+    GenServer.start_link(__MODULE__, host, name: via_tuple(host))
   end
 
-  def start(opts) do
-    # {host, opts} = Keyword.pop!(opts, :host)
-    GenServer.start(__MODULE__, opts)
+  defp via_tuple(host) do
+    Xomium.ProcessRegistry.via_tuple({__MODULE__, host})
+  end
+
+  def get(pid, path, headers, body) do
+    GenServer.call(pid, {:request, "GET", path, headers, body}, :timer.seconds(60 * 3))
   end
 
   def post(pid, path, headers, body) do
-    GenServer.call(pid, {:request, "POST", path, headers, body})
-  end
-
-  # tmp
-  def mk_body(jwt) do
-    [
-      "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=",
-      jwt
-    ]
+    GenServer.call(pid, {:request, "POST", path, headers, body}, :timer.seconds(60 * 3))
   end
 
   @impl true
-  # @spec init(String.t()) :: {:ok, struct()}
-  def init(host: host) do
+  def init(host) do
     {:ok, %__MODULE__{host: host}}
   end
 
@@ -63,6 +56,14 @@ defmodule Xomium.HttpRequest do
         state = put_in(state.conn, conn)
         state = Enum.reduce(responses, state, &process_response/2)
         {:noreply, state}
+
+      # TODO on perd la requête en cours, non ? il faut donc a priori bien un sytème de queue
+      # de tâches à effectuer et à réessayer (un certain nombre de fois) -> à ne pas enlever de la
+      # queue tant que pas finie
+      # Doit être extérieur à ce module je pense
+      {:error, conn, reason, _resp} ->
+        Logger.error("Connection closed while streaming: #{inspect(reason)}/#{inspect(conn)}")
+        {:noreply, state}
     end
   end
 
@@ -80,7 +81,7 @@ defmodule Xomium.HttpRequest do
         {:ok, state}
 
       {:error, reason} ->
-        Logger.error("Cannot connect: #{Exception.message(reason)}")
+        Logger.error("Cannot connect: #{Exception.message(reason)}. Will retry (#{nb_tries}")
         Process.sleep(100)
         connect(state, nb_tries - 1)
     end
@@ -89,10 +90,11 @@ defmodule Xomium.HttpRequest do
   defp connect(state, nb_tries) do
     case Mint.HTTP.open?(state.conn) do
       true ->
+        Logger.debug("Already connected")
         {:ok, state}
 
       false ->
-        # reset connection
+        Logger.info("Disconnected. Reset connection")
         connect(%{state | conn: nil}, nb_tries)
     end
   end

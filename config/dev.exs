@@ -52,6 +52,7 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix, :stacktrace_depth, 20
 
 config :xomium,
-  google_api_url: "oauth2.googleapis.com",
+  google_oauth_api_url: "oauth2.googleapis.com",
+  google_file_api_url: "www.googleapis.com",
   google_secret_pem_path: Path.expand("../google_secret.pem", __DIR__),
-  iss: "xomium-dev@xomium-dev.iam.gserviceaccount.com"
+  issuer: "xomium-dev@xomium-dev.iam.gserviceaccount.com"

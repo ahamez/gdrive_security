@@ -7,7 +7,7 @@ defmodule Xomium.Google.JwtTest do
   # Generated with `openssl rsa -in private.pem -out public.pem -outform PEM -pubout`
   @public_key_pem File.read!(Path.join(__DIR__, "../test_public_pem.txt"))
 
-  test "make/5 generates a valid JWT" do
+  test "make_jwt/5 generates a valid JWT" do
     [encoded_secret_key] = :public_key.pem_decode(@secret_key_pem)
     secret_key = :public_key.pem_entry_decode(encoded_secret_key)
 
@@ -26,7 +26,7 @@ defmodule Xomium.Google.JwtTest do
 
     sub = "bar@example.com"
 
-    jwt = Xomium.Google.Jwt.make(secret_key, iss, scopes, ttl, sub)
+    jwt = Xomium.Google.Jwt.make_jwt(secret_key, iss, scopes, ttl, sub)
     assert [header64, claim64, sig64] = String.split(jwt, ".")
 
     # Header never changes

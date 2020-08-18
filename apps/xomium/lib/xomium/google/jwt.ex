@@ -14,8 +14,27 @@ defmodule Xomium.Google.Jwt do
   - sub: the Google email address of the account to impersonate
   """
   @spec make(tuple(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
-  def make(secret_key, iss, scopes, ttl, sub) when ttl <= 3600 do
-    claim64 = make_claim(iss, scopes, ttl, sub) |> Jason.encode!() |> Base.url_encode64()
+  def make(secret_key, issuer, scopes, ttl, sub) do
+    URI.encode_query(%{
+      "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      "assertion" => make_jwt(secret_key, issuer, scopes, ttl, sub)
+    })
+  end
+
+  @doc """
+  ## Parameters
+  - secret_key: private key (provided by Google)
+  - issuer: issuer (provided by Google)
+  - scope: list of Google scopes (https://developers.google.com/identity/protocols/oauth2/scopes)
+  - ttl: time to live given in seconds, 0 <= ttl <= 3600
+  - sub: the Google email address of the account to impersonate
+  """
+  @spec make_jwt(tuple(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
+  def make_jwt(secret_key, issuer, scopes, ttl, sub) when ttl <= 3600 do
+    claim64 =
+      make_claim(issuer, scopes, ttl, sub)
+      |> Jason.encode!()
+      |> Base.url_encode64()
 
     content = "#{@header64}.#{claim64}"
 
@@ -27,11 +46,11 @@ defmodule Xomium.Google.Jwt do
     "#{content}.#{sig64}"
   end
 
-  defp make_claim(iss, scopes, ttl, sub) do
+  defp make_claim(issuer, scopes, ttl, sub) do
     now = DateTime.utc_now()
 
     %{
-      "iss" => iss,
+      "iss" => issuer,
       "scope" => Enum.join(scopes, " "),
       "aud" => "https://oauth2.googleapis.com/token",
       "iat" => DateTime.to_unix(now),

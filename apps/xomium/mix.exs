@@ -30,6 +30,7 @@ defmodule Xomium.MixProject do
   defp deps do
     [
       {:castore, "~> 0.1"},
+      {:con_cache, "~> 0.14"},
       {:ecto_sql, "~> 3.4"},
       {:jason, "~> 1.0"},
       {:mint, "~> 1.1"},

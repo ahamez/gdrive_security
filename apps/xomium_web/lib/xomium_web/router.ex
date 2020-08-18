@@ -19,10 +19,11 @@ defmodule XomiumWeb.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", XomiumWeb do
-  #   pipe_through :api
-  # end
+  scope "/web_hook", XomiumWeb do
+    pipe_through :api
+
+    post "/", WebHookController, :handle
+  end
 
   # Enables LiveDashboard only for development
   #
