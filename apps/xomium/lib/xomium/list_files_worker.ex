@@ -1,4 +1,4 @@
-defmodule Xomium.HttpWorker do
+defmodule Xomium.ListFilesWorker do
   @moduledoc false
 
   use Oban.Worker, queue: :http_requests
@@ -7,7 +7,7 @@ defmodule Xomium.HttpWorker do
   def perform(%Oban.Job{args: %{"account" => account, "page_token" => page_token}}) do
     case Xomium.Google.Files.list(account, page_token) do
       {:ok, _files} ->
-        # TODO Save file in db
+        # TODO Save files in db
         :ok
 
       {:error, {:not_found, _}} ->

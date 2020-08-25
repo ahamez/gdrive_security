@@ -37,7 +37,7 @@ defmodule Xomium.Google.Files do
       {:ok, files, next_page_token} ->
         if next_page_token do
           %{account: account, page_token: next_page_token}
-          |> Xomium.HttpWorker.new()
+          |> Xomium.ListFilesWorker.new()
           |> Oban.insert()
         end
 
