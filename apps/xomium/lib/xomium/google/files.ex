@@ -44,7 +44,7 @@ defmodule Xomium.Google.Files do
         {:ok, files}
 
       {:error, reason} ->
-        Logger.warn("Error when retreiving files for #{account}: #{inspect(reason)}")
+        Logger.warn("Cannot retrieve files for #{account}: #{inspect(reason)}")
         {:error, reason}
     end
   end
@@ -71,6 +71,8 @@ defmodule Xomium.Google.Files do
   end
 
   defp request(request_pid, account, page_token) do
+    # TODO Check if this cover files shared with an address that is external
+    # to the domain
     filter = ~w[
       visibility='anyoneCanFind'
       or
@@ -87,9 +89,17 @@ defmodule Xomium.Google.Files do
 
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
          headers = [{"Authorization", "Bearer #{bearer_token}"}],
-         {:ok, %{data: data}} <- get(request_pid, parameters, headers),
+         {:ok, %{data: data, status: 200}} <- get(request_pid, parameters, headers),
          {:ok, jason} <- Jason.decode(data) do
       {:ok, jason}
+    else
+      {:ok, %{status: status, data: data}} ->
+        jason = Jason.decode!(data)
+        Logger.warn("Status #{status}: #{inspect(jason)}")
+        {:error, Xomium.Google.HttpStatus.status(status, jason)}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
