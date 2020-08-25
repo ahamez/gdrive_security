@@ -4,10 +4,6 @@ defmodule Xomium.HttpRequestCache do
   use DynamicSupervisor
   require Logger
 
-  defstruct host: nil,
-            conn: nil,
-            requests: %{}
-
   def start_link(init_arg) do
     Logger.debug("Starting #{__MODULE__}")
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
@@ -19,6 +15,7 @@ defmodule Xomium.HttpRequestCache do
   end
 
   def server_process(host) do
+    # TODO: lookup for existing process before launching a new one.
     case start_child(host) do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
