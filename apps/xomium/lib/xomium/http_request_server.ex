@@ -57,8 +57,13 @@ defmodule Xomium.HttpRequestServer do
         state = Enum.reduce(responses, state, &process_response/2)
         {:noreply, state}
 
-      {:error, conn, reason, _resp} ->
-        Logger.error("Connection closed while streaming: #{inspect(reason)}/#{inspect(conn)}")
+      {:error, _conn, reason, _resp} ->
+        Logger.warn("Connection closed while streaming: #{inspect(reason)}")
+
+        Enum.each(state.requests, fn {_request_ref, %{from: from}} ->
+          GenServer.reply(from, {:error, reason})
+        end)
+
         {:noreply, state}
     end
   end
