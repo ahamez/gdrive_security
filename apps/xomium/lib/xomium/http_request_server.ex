@@ -101,6 +101,13 @@ defmodule Xomium.HttpRequestServer do
     )
   end
 
+  defp process_response({:error, request_ref, reason}, state) do
+    {%{from: from}, state} = pop_in(state.requests[request_ref])
+    GenServer.reply(from, {:error, reason})
+
+    state
+  end
+
   defp process_response({:done, request_ref}, state) do
     {%{response: response, from: from}, state} = pop_in(state.requests[request_ref])
     GenServer.reply(from, {:ok, response})
