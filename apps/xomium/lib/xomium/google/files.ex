@@ -13,7 +13,6 @@ defmodule Xomium.Google.Files do
                   "name",
                   "owners(emailAddress)",
                   "permissions(type,emailAddress)",
-                  # "permissionIds",
                   # "parents",
                   "webViewLink",
                   "shared",
@@ -26,88 +25,88 @@ defmodule Xomium.Google.Files do
     "includeItemsFromAllDrives" => true,
     "pageSize" => 1000,
     "corpora" => "allDrives",
-    # "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
     "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
   }
 
-  @spec list(binary()) :: %{}
-  def list(account) do
+  @spec list(String.t(), String.t() | nil) :: {:ok, %{}} | {:error, any}
+  def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
     request_pid = Xomium.HttpRequestCache.server_process(file_api_url)
 
-    request_fun = fn next_page_token ->
-      request(request_pid, account, next_page_token)
+    case get_page(request_pid, account, page_token) do
+      {:ok, files, next_page_token} ->
+        if next_page_token do
+          %{account: account, page_token: next_page_token}
+          |> Xomium.HttpWorker.new()
+          |> Oban.insert()
+        end
+
+        {:ok, files}
+
+      {:error, reason} ->
+        Logger.warn("Error when retreiving files for #{account}: #{inspect(reason)}")
+        {:error, reason}
     end
-
-    files = get_page(request_fun, %{}, "")
-    Logger.info("Retreived #{map_size(files)} files for #{account}")
-
-    files
   end
 
-  defp get_page(_request_fun, files, nil) do
-    files
+  defp get_page(request_pid, account, page_token) do
+    case request(request_pid, account, page_token) do
+      {:ok, data} ->
+        files =
+          case data["files"] do
+            nil ->
+              Logger.debug("Empty data[files] for #{account}")
+              %{}
+
+            files ->
+              Logger.debug("Received #{length(files)} files for #{account}")
+              files
+          end
+
+        {:ok, files, data["nextPageToken"]}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
-  defp get_page(request_fun, files, next_page_token) do
-    # Logger.debug("Get files for #{inspect(next_page_token)}")
-
-    # TODO measure time taken (à ajouter dans les metrics telemetry)
-    t0 = Time.utc_now()
-    data = request_fun.(next_page_token)
-    t1 = Time.utc_now()
-
-    new_files =
-      case data["files"] do
-        nil ->
-          Logger.info("Empty data[files]")
-          files
-
-        _ ->
-          Enum.reduce(data["files"], files, fn file, acc ->
-            Map.put(acc, file["id"], file)
-          end)
-      end
-
-    t2 = Time.utc_now()
-
-    t1t0 = Time.diff(t1, t0, :microsecond) / 1_000_000
-    t2t1 = Time.diff(t2, t1, :microsecond) / 1_000_000
-
-    # :telemetry.execute([:xomium, :get_page], %{duration: t1t0})
-
-    Logger.debug(
-      "Processed #{map_size(new_files) - map_size(files)} files in #{t1t0}s and in #{t2t1}s for a total of #{
-        map_size(new_files)
-      } files"
-    )
-
-    get_page(request_fun, new_files, data["nextPageToken"])
-  end
-
-  defp request(request_pid, account, next_page_token) do
-    bearer_token = Xomium.Google.AccessToken.get(account)
-
+  defp request(request_pid, account, page_token) do
     filter = ~w[
       visibility='anyoneCanFind'
       or
       visibility='anyoneWithLink'
     ] |> Enum.join(" ")
 
-    headers = [{"Authorization", "Bearer #{bearer_token}"}]
-    parameters = Map.put(@query_parameters, "pageToken", next_page_token)
+    parameters =
+      case page_token do
+        nil -> @query_parameters
+        _ -> Map.put(@query_parameters, "pageToken", page_token)
+      end
+
     parameters = Map.put(parameters, "q", filter)
 
-    # Logger.debug("#{URI.encode_query(parameters)}")
+    with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
+         headers = [{"Authorization", "Bearer #{bearer_token}"}],
+         {:ok, %{data: data}} <- get(request_pid, parameters, headers),
+         {:ok, jason} <- Jason.decode(data) do
+      {:ok, jason}
+    end
+  end
 
-    {:ok, %{data: data}} =
+  defp get(pid, parameters, headers) do
+    t0 = Time.utc_now()
+
+    res =
       Xomium.HttpRequestServer.get(
-        request_pid,
+        pid,
         "/drive/v3/files?#{URI.encode_query(parameters)}",
         headers,
         ""
       )
 
-    Jason.decode!(data)
+    time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
+    Logger.debug("List files request processed in #{time}s")
+
+    res
   end
 end

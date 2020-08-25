@@ -57,10 +57,6 @@ defmodule Xomium.HttpRequestServer do
         state = Enum.reduce(responses, state, &process_response/2)
         {:noreply, state}
 
-      # TODO on perd la requête en cours, non ? il faut donc a priori bien un sytème de queue
-      # de tâches à effectuer et à réessayer (un certain nombre de fois) -> à ne pas enlever de la
-      # queue tant que pas finie
-      # Doit être extérieur à ce module je pense
       {:error, conn, reason, _resp} ->
         Logger.error("Connection closed while streaming: #{inspect(reason)}/#{inspect(conn)}")
         {:noreply, state}
@@ -90,7 +86,6 @@ defmodule Xomium.HttpRequestServer do
   defp connect(state, nb_tries) do
     case Mint.HTTP.open?(state.conn) do
       true ->
-        Logger.debug("Already connected")
         {:ok, state}
 
       false ->

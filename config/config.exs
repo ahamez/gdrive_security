@@ -50,6 +50,12 @@ if Mix.env() != :prod do
     ]
 end
 
+config :xomium, Oban,
+  repo: Xomium.Repo,
+  prefix: "jobs",
+  plugins: [Oban.Plugins.Pruner],
+  queues: [http_requests: 10]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"
