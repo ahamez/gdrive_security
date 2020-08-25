@@ -49,7 +49,7 @@ defmodule Xomium.HttpRequestServer do
   def handle_info(msg, state) do
     case Mint.HTTP.stream(state.conn, msg) do
       :unknown ->
-        Logger.error("Received unknown message #{inspect(msg)}")
+        Logger.error("#{__MODULE__} received unknown message #{inspect(msg)}")
         {:noreply, state}
 
       {:ok, conn, responses} ->
@@ -63,34 +63,26 @@ defmodule Xomium.HttpRequestServer do
     end
   end
 
-  defp connect(state, nb_tries \\ 5)
-
-  defp connect(_state, 0) do
-    Logger.error("Cannot connect, bailing out")
-    {:error, :too_many_connection_attempts}
-  end
-
-  defp connect(state = %__MODULE__{conn: nil}, nb_tries) do
+  defp connect(state = %__MODULE__{conn: nil}) do
     case Mint.HTTP.connect(:https, state.host, 443) do
       {:ok, conn} ->
         state = put_in(state.conn, conn)
         {:ok, state}
 
       {:error, reason} ->
-        Logger.error("Cannot connect: #{Exception.message(reason)}. Will retry (#{nb_tries}")
-        Process.sleep(100)
-        connect(state, nb_tries - 1)
+        Logger.warn("Cannot connect: #{Exception.message(reason)}")
+        {:error, reason}
     end
   end
 
-  defp connect(state, nb_tries) do
+  defp connect(state) do
     case Mint.HTTP.open?(state.conn) do
       true ->
         {:ok, state}
 
       false ->
-        Logger.info("Disconnected. Reset connection")
-        connect(%{state | conn: nil}, nb_tries)
+        Logger.warn("#{state.host} disconnected. Reset connection")
+        connect(%{state | conn: nil})
     end
   end
 
