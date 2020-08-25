@@ -13,11 +13,13 @@ defmodule Xomium.HttpWorker do
     Xomium.Google.Files.list(account, page_token)
   end
 
-  # TODO https://hexdocs.pm/oban/Oban.Worker.html#module-customizing-backoff
-  # @impl Worker
-  # def backoff(%Oban.Job{attempt: attempt}) do
-  #   trunc(:math.pow(attempt, 4) + 15 + :rand.uniform(30) * attempt)
-  # end
-end
+  @impl Oban.Worker
+  def timeout(_job) do
+    :timer.seconds(120)
+  end
 
-# %{account: "alexandre.ledit@easymile.com"} |> Xomium.HttpWorker.new() |> Oban.insert()
+  @impl Oban.Worker
+  def backoff(%Oban.Job{attempt: attempt}) do
+    trunc(:math.pow(attempt, 2) + 15 + :rand.uniform(30) * attempt)
+  end
+end
