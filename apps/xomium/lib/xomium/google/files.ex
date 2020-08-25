@@ -90,13 +90,13 @@ defmodule Xomium.Google.Files do
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
          headers = [{"Authorization", "Bearer #{bearer_token}"}],
          {:ok, %{data: data, status: 200}} <- get(request_pid, parameters, headers),
-         {:ok, jason} <- Jason.decode(data) do
-      {:ok, jason}
+         {:ok, json} <- Jason.decode(data) do
+      {:ok, json}
     else
       {:ok, %{status: status, data: data}} ->
-        jason = Jason.decode!(data)
-        Logger.warn("Status #{status}: #{inspect(jason)}")
-        {:error, Xomium.Google.HttpStatus.status(status, jason)}
+        json = Jason.decode!(data)
+        Logger.warn("Status #{status}: #{inspect(json)}")
+        {:error, Xomium.Google.HttpStatus.status(status, json)}
 
       {:error, reason} ->
         {:error, reason}

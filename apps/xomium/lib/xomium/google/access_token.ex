@@ -49,8 +49,8 @@ defmodule Xomium.Google.AccessToken do
     request_pid = Xomium.HttpRequestCache.server_process(oauth_api_url)
 
     with {:ok, %{data: data}} <- post_request(request_pid, request_body),
-         {:ok, jason} <- Jason.decode(data),
-         {:ok, access_token} <- get_access_token(jason) do
+         {:ok, json} <- Jason.decode(data),
+         {:ok, access_token} <- get_access_token(json) do
       {:ok, access_token}
     else
       {:error, reason} ->
@@ -68,14 +68,14 @@ defmodule Xomium.Google.AccessToken do
     )
   end
 
-  defp get_access_token(jason) do
-    case Map.fetch(jason, "access_token") do
+  defp get_access_token(json) do
+    case Map.fetch(json, "access_token") do
       {:ok, access_token} ->
         {:ok, access_token}
 
       :error ->
-        error = jason["error"]
-        error_description = jason["error_description"]
+        error = json["error"]
+        error_description = json["error_description"]
         {:error, {error, error_description}}
     end
   end
