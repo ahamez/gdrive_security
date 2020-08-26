@@ -96,7 +96,15 @@ defmodule Xomium.Google.Files do
       {:ok, %{status: status, data: data}} ->
         json = Jason.decode!(data)
         Logger.warn("Status #{status}: #{inspect(json)}")
-        {:error, Xomium.Google.HttpStatus.status(status, json)}
+
+        reason = Xomium.Google.HttpStatus.reason(status, json)
+
+        if reason == {:forbidden, :auth_error} do
+          Logger.warn("Authentication error for #{account}. Resetting access token.")
+          :ok = Xomium.Google.AccessToken.delete(account)
+        end
+
+        {:error, reason}
 
       {:error, reason} ->
         {:error, reason}

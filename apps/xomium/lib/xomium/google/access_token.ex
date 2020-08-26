@@ -1,11 +1,13 @@
 defmodule Xomium.Google.AccessToken do
-  @moduledoc false
+  @moduledoc """
+  https://developers.google.com/identity/protocols/oauth2/service-account
+  """
 
   require Logger
 
   # 3600 seconds: max TTL authorized by Google.
   @ttl 3600
-  @cache_ttl @ttl - 100
+  @cache_ttl 1800
   @scopes [
     "https://www.googleapis.com/auth/drive.metadata",
     "https://www.googleapis.com/auth/drive.readonly",
@@ -39,6 +41,11 @@ defmodule Xomium.Google.AccessToken do
     end)
   end
 
+  @spec delete(String.t()) :: :ok
+  def delete(account) do
+    ConCache.delete(:access_token_cache, account)
+  end
+
   defp request(account) do
     Logger.debug("Renewing access token for #{account}")
 
@@ -52,10 +59,6 @@ defmodule Xomium.Google.AccessToken do
          {:ok, json} <- Jason.decode(data),
          {:ok, access_token} <- get_access_token(json) do
       {:ok, access_token}
-    else
-      {:error, reason} ->
-        Logger.warn("Cannot retreive access token for #{account}: #{inspect(reason)}")
-        {:error, reason}
     end
   end
 
@@ -76,7 +79,17 @@ defmodule Xomium.Google.AccessToken do
       :error ->
         error = json["error"]
         error_description = json["error_description"]
-        {:error, {error, error_description}}
+
+        reason =
+          case {error, error_description} do
+            {"invalid_grant", "Invalid email or User ID"} ->
+              :invalid_email_or_user_id
+
+            other ->
+              other
+          end
+
+        {:error, reason}
     end
   end
 end

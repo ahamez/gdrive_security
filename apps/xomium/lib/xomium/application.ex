@@ -7,13 +7,13 @@ defmodule Xomium.Application do
     conf = configure()
 
     children = [
-      Xomium.Repo,
+      {Oban, conf.oban},
       {Phoenix.PubSub, [name: Xomium.PubSub]},
+      Xomium.Repo,
       {Xomium.Secrets, [name: :secrets, google_secret_pem_path: conf.google_secret_pem_path]},
       Xomium.ProcessRegistry,
       Xomium.HttpRequestCache,
-      Xomium.Google.AccessToken,
-      {Oban, conf.oban}
+      Xomium.Google.AccessToken
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xomium.Supervisor)

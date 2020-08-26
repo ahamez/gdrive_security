@@ -16,6 +16,9 @@ defmodule Xomium.ListFilesWorker do
       {:error, {:bad_request, reason}} ->
         {:discard, {:bad_request, reason}}
 
+      {:error, :invalid_email_or_user_id} ->
+        {:discard, :invalid_email_or_user_id}
+
       # TODO snooze when daily limit or other limits are reached
       # {:error, {:forbidden, :daily_limit_exceeded}}
 
