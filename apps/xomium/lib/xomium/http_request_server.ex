@@ -16,10 +16,12 @@ defmodule Xomium.HttpRequestServer do
     Xomium.ProcessRegistry.via_tuple({__MODULE__, host})
   end
 
+  @spec get(pid(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
   def get(pid, path, headers, body) do
     GenServer.call(pid, {:request, "GET", path, headers, body}, :timer.seconds(60 * 3))
   end
 
+  @spec post(pid(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
   def post(pid, path, headers, body) do
     GenServer.call(pid, {:request, "POST", path, headers, body}, :timer.seconds(60 * 3))
   end
