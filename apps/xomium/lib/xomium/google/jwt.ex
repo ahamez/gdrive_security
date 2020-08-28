@@ -13,8 +13,8 @@ defmodule Xomium.Google.Jwt do
   - ttl: time to live given in seconds, 0 <= ttl <= 3600
   - sub: the Google email address of the account to impersonate
   """
-  @spec make(tuple(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
-  def make(secret_key, issuer, scopes, ttl, sub) do
+  @spec make_query(tuple(), binary(), [binary()], non_neg_integer(), binary()) :: binary()
+  def make_query(secret_key, issuer, scopes, ttl, sub) do
     URI.encode_query(%{
       "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
       "assertion" => make_jwt(secret_key, issuer, scopes, ttl, sub)

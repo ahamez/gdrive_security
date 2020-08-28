@@ -52,7 +52,7 @@ defmodule Xomium.Google.AccessToken do
     secret = Xomium.Secrets.get(:secrets, :google)
     issuer = Application.fetch_env!(:xomium, :issuer)
     oauth_api_url = Application.fetch_env!(:xomium, :google_oauth_api_url)
-    request_body = Xomium.Google.Jwt.make(secret, issuer, @scopes, @ttl, account)
+    request_body = Xomium.Google.Jwt.make_query(secret, issuer, @scopes, @ttl, account)
     request_pid = Xomium.HttpRequestCache.server_process(oauth_api_url)
 
     with {:ok, %{data: data}} <- post_request(request_pid, request_body),
