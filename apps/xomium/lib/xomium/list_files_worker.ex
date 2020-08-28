@@ -34,7 +34,7 @@ defmodule Xomium.ListFilesWorker do
 
   @impl Oban.Worker
   def timeout(_job) do
-    :timer.seconds(120)
+    :timer.seconds(60)
   end
 
   @impl Oban.Worker
