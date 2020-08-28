@@ -34,14 +34,14 @@ defmodule Xomium.Google.AccessToken do
     )
   end
 
-  @spec get(String.t()) :: {:ok, String.t()} | {:error, any}
+  @spec get(binary()) :: {:ok, binary()} | {:error, any}
   def get(account) do
     ConCache.fetch_or_store(:access_token_cache, account, fn ->
       request(account)
     end)
   end
 
-  @spec delete(String.t()) :: :ok
+  @spec delete(binary()) :: :ok
   def delete(account) do
     ConCache.delete(:access_token_cache, account)
   end

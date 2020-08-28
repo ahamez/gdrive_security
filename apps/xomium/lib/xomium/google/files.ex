@@ -28,7 +28,7 @@ defmodule Xomium.Google.Files do
     "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
   }
 
-  @spec list(String.t(), String.t() | nil) :: {:ok, %{}} | {:error, any}
+  @spec list(binary(), binary() | nil) :: {:ok, %{}} | {:error, any}
   def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
     request_pid = Xomium.HttpRequestCache.server_process(file_api_url)
