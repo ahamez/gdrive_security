@@ -52,13 +52,20 @@ defmodule Xomium.Google.AccessToken do
     secret = Xomium.Secrets.get(:secrets, :google)
     issuer = Application.fetch_env!(:xomium, :issuer)
     oauth_api_url = Application.fetch_env!(:xomium, :google_oauth_api_url)
-    request_body = Xomium.Google.Jwt.make_query(secret, issuer, @scopes, @ttl, account)
+    request_body = make_query(secret, issuer, account)
 
     with {:ok, %{data: data}} <- post_request(oauth_api_url, request_body),
          {:ok, json} <- Jason.decode(data),
          {:ok, access_token} <- get_access_token(json) do
       {:ok, access_token}
     end
+  end
+
+  defp make_query(secret_key, issuer, sub) do
+    URI.encode_query(%{
+      "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      "assertion" => Xomium.Google.Jwt.make(secret_key, issuer, @scopes, @ttl, sub)
+    })
   end
 
   defp post_request(url, token_request_body) do

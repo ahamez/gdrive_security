@@ -26,7 +26,7 @@ defmodule Xomium.Google.JwtTest do
 
     sub = "bar@example.com"
 
-    jwt = Xomium.Google.Jwt.make_jwt(secret_key, iss, scopes, ttl, sub)
+    jwt = Xomium.Google.Jwt.make(secret_key, iss, scopes, ttl, sub)
     assert [header64, claim64, sig64] = String.split(jwt, ".")
 
     # Header never changes
