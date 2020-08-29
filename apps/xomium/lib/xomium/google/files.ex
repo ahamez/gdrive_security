@@ -31,9 +31,9 @@ defmodule Xomium.Google.Files do
   @spec list(binary(), binary() | nil) :: {:ok, %{}} | {:error, any}
   def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
-    request_pid = Xomium.HttpRequestCache.server_process(file_api_url)
+    # request_pid = Xomium.HttpRequestCache.server_process(file_api_url)
 
-    case get_page(request_pid, account, page_token) do
+    case get_page(file_api_url, account, page_token) do
       {:ok, files, next_page_token} ->
         if next_page_token do
           %{account: account, page_token: next_page_token}
@@ -49,8 +49,8 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp get_page(request_pid, account, page_token) do
-    case request(request_pid, account, page_token) do
+  defp get_page(url, account, page_token) do
+    case request(url, account, page_token) do
       {:ok, data} ->
         files =
           case data["files"] do
@@ -70,7 +70,7 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp request(request_pid, account, page_token) do
+  defp request(url, account, page_token) do
     # TODO Check if this cover files shared with an address that is external
     # to the domain
     filter = ~w[
@@ -89,7 +89,7 @@ defmodule Xomium.Google.Files do
 
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
          headers = [{"Authorization", "Bearer #{bearer_token}"}],
-         {:ok, %{data: data, status: 200}} <- get(request_pid, parameters, headers),
+         {:ok, %{data: data, status: 200}} <- get(url, parameters, headers),
          {:ok, json} <- Jason.decode(data) do
       {:ok, json}
     else
@@ -111,12 +111,12 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp get(pid, parameters, headers) do
+  defp get(url, parameters, headers) do
     t0 = Time.utc_now()
 
     res =
-      Xomium.HttpRequestServer.get(
-        pid,
+      Xomium.HttpRequest.get(
+        url,
         "/drive/v3/files?#{URI.encode_query(parameters)}",
         headers,
         ""

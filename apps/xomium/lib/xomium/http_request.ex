@@ -1,4 +1,4 @@
-defmodule Xomium.HttpRequestServer do
+defmodule Xomium.HttpRequest do
   @moduledoc false
 
   use GenServer
@@ -16,19 +16,25 @@ defmodule Xomium.HttpRequestServer do
     Xomium.ProcessRegistry.via_tuple({__MODULE__, host})
   end
 
-  @spec get(pid(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
-  def get(pid, path, headers, body) do
-    GenServer.call(pid, {:request, "GET", path, headers, body}, :timer.seconds(60 * 3))
+  @spec get(binary(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
+  def get(url, path, headers, body) do
+    request("GET", url, path, headers, body)
   end
 
-  @spec post(pid(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
-  def post(pid, path, headers, body) do
-    GenServer.call(pid, {:request, "POST", path, headers, body}, :timer.seconds(60 * 3))
+  @spec post(binary(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
+  def post(url, path, headers, body) do
+    request("POST", url, path, headers, body)
   end
 
   @impl true
   def init(host) do
     {:ok, %__MODULE__{host: host}}
+  end
+
+  defp request(method, url, path, headers, body) do
+    url
+    |> Xomium.HttpRequestCache.server_process()
+    |> GenServer.call({:request, method, path, headers, body}, :timer.seconds(60 * 3))
   end
 
   @impl true
