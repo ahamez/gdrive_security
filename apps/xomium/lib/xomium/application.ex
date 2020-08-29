@@ -12,7 +12,7 @@ defmodule Xomium.Application do
       Xomium.Repo,
       {Xomium.Secrets, [name: :secrets, google_secret_pem_path: conf.google_secret_pem_path]},
       Xomium.ProcessRegistry,
-      Xomium.HttpRequestCache,
+      Xomium.MintHttpCache,
       Xomium.Google.AccessToken
     ]
 

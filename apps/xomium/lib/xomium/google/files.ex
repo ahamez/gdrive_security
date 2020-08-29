@@ -31,7 +31,6 @@ defmodule Xomium.Google.Files do
   @spec list(binary(), binary() | nil) :: {:ok, %{}} | {:error, any}
   def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
-    # request_pid = Xomium.HttpRequestCache.server_process(file_api_url)
 
     case get_page(file_api_url, account, page_token) do
       {:ok, files, next_page_token} ->
@@ -114,13 +113,8 @@ defmodule Xomium.Google.Files do
   defp get(url, parameters, headers) do
     t0 = Time.utc_now()
 
-    res =
-      Xomium.HttpRequest.get(
-        url,
-        "/drive/v3/files?#{URI.encode_query(parameters)}",
-        headers,
-        ""
-      )
+    path = "/drive/v3/files?#{URI.encode_query(parameters)}"
+    res = Xomium.MintHttp.get(url, path, headers)
 
     time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
     Logger.debug("List files request processed in #{time}s")

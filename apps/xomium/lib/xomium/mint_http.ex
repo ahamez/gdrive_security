@@ -1,5 +1,7 @@
-defmodule Xomium.HttpRequest do
+defmodule Xomium.MintHttp do
   @moduledoc false
+
+  @behaviour Xomium.HttpClient
 
   use GenServer
   require Logger
@@ -16,12 +18,12 @@ defmodule Xomium.HttpRequest do
     Xomium.ProcessRegistry.via_tuple({__MODULE__, host})
   end
 
-  @spec get(binary(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
-  def get(url, path, headers, body) do
-    request("GET", url, path, headers, body)
+  @impl true
+  def get(url, path, headers) do
+    request("GET", url, path, headers, "")
   end
 
-  @spec post(binary(), binary(), [{binary(), binary()}], binary()) :: {:ok, map()} | {:error, any}
+  @impl true
   def post(url, path, headers, body) do
     request("POST", url, path, headers, body)
   end
@@ -33,7 +35,7 @@ defmodule Xomium.HttpRequest do
 
   defp request(method, url, path, headers, body) do
     url
-    |> Xomium.HttpRequestCache.server_process()
+    |> Xomium.MintHttpCache.server_process()
     |> GenServer.call({:request, method, path, headers, body}, :timer.seconds(60 * 3))
   end
 

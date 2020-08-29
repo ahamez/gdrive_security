@@ -1,4 +1,4 @@
-defmodule Xomium.HttpRequestCache do
+defmodule Xomium.MintHttpCache do
   @moduledoc false
 
   use DynamicSupervisor
@@ -25,7 +25,7 @@ defmodule Xomium.HttpRequestCache do
   defp start_child(host) do
     DynamicSupervisor.start_child(
       __MODULE__,
-      {Xomium.HttpRequest, host}
+      {Xomium.MintHttp, host}
     )
   end
 end

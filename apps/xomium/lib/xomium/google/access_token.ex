@@ -62,7 +62,7 @@ defmodule Xomium.Google.AccessToken do
   end
 
   defp post_request(url, token_request_body) do
-    Xomium.HttpRequest.post(
+    Xomium.MintHttp.post(
       url,
       "/token",
       [{"Content-Type", "application/x-www-form-urlencoded"}],
