@@ -71,25 +71,9 @@ defmodule Xomium.Google.Files do
 
   defp request_page(url, account, page_token) do
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
-         {:ok, %{data: data, status: 200}} <- call_drive_api(url, page_token, bearer_token),
+         {:ok, data} <- call_drive_api(url, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       {:ok, json}
-    else
-      {:ok, %{status: status, data: data}} ->
-        json = Jason.decode!(data)
-        Logger.warn("Status #{status}: #{inspect(json)}")
-
-        reason = Xomium.Google.HttpStatus.reason(status, json)
-
-        if reason == {:unauthorized, :auth_error} do
-          Logger.warn("Authentication error for #{account}. Resetting access token.")
-          :ok = Xomium.Google.AccessToken.delete(account)
-        end
-
-        {:error, reason}
-
-      {:error, reason} ->
-        {:error, reason}
     end
   end
 
@@ -114,7 +98,18 @@ defmodule Xomium.Google.Files do
 
     path = "/drive/v3/files?#{URI.encode_query(parameters)}"
     headers = [{"Authorization", "Bearer #{bearer_token}"}]
-    res = Xomium.MintHttp.get(url, path, headers)
+
+    res =
+      case Xomium.MintHttp.get(url, path, headers) do
+        {:ok, %{data: data, status: 200}} ->
+          {:ok, data}
+
+        {:ok, %{data: data}} ->
+          {:error, Xomium.Google.DriveApiError.new(data)}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
 
     time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
     Logger.debug("List files request processed in #{time}s")

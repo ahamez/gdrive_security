@@ -3,6 +3,10 @@ defmodule Xomium.ListFilesWorker do
 
   use Oban.Worker, queue: :http_requests
 
+  require Logger
+
+  alias Xomium.Google.DriveApiError
+
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"account" => account, "page_token" => page_token}}) do
     case Xomium.Google.Files.list(account, page_token) do
@@ -10,11 +14,16 @@ defmodule Xomium.ListFilesWorker do
         # TODO Save files in db
         :ok
 
-      {:error, {:not_found, _}} ->
+      {:error, %DriveApiError{reason: {:not_found, _}}} ->
         {:discard, :not_found}
 
-      {:error, {:bad_request, reason}} ->
+      {:error, %DriveApiError{reason: {:bad_request, reason}}} ->
         {:discard, {:bad_request, reason}}
+
+      {:error, reason = %DriveApiError{reason: {:unauthorized, :aut_error}}} ->
+        Logger.warn("Authentication error for #{account}. Resetting access token.")
+        :ok = Xomium.Google.AccessToken.delete(account)
+        {:error, reason}
 
       {:error, :invalid_email_or_user_id} ->
         {:discard, :invalid_email_or_user_id}
