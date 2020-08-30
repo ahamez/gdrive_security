@@ -4,12 +4,12 @@ defmodule Xomium.HttpClient do
   """
 
   @callback get(url :: binary(), path :: binary(), headers :: [{binary(), binary()}]) ::
-              {:ok, map()} | {:error, any}
+              {:ok, map()} | {:error, any()}
 
   @callback post(
               url :: binary(),
               path :: binary(),
               headers :: [{binary(), binary()}],
               body :: binary()
-            ) :: {:ok, map()} | {:error, any}
+            ) :: {:ok, map()} | {:error, any()}
 end
