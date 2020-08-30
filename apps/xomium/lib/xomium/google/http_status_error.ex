@@ -8,7 +8,7 @@ defmodule Xomium.Google.HttpStatus do
   end
 
   def reason(401, json) do
-    {:forbidden, reason_text_to_atom(json)}
+    {:unauthorized, reason_text_to_atom(json)}
   end
 
   def reason(403, json) do
@@ -42,6 +42,7 @@ defmodule Xomium.Google.HttpStatus do
       "invalidParameter" -> :invalid_parameter
       "authError" -> :auth_error
       "internalError" -> :internal_error
+      "invalid" -> :invalid
       _ -> :unknown
     end
   end

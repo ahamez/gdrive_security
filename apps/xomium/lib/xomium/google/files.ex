@@ -98,7 +98,7 @@ defmodule Xomium.Google.Files do
 
         reason = Xomium.Google.HttpStatus.reason(status, json)
 
-        if reason == {:forbidden, :auth_error} do
+        if reason == {:unauthorized, :auth_error} do
           Logger.warn("Authentication error for #{account}. Resetting access token.")
           :ok = Xomium.Google.AccessToken.delete(account)
         end
