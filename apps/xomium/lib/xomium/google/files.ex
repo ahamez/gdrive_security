@@ -32,7 +32,7 @@ defmodule Xomium.Google.Files do
   def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
 
-    case get_page(file_api_url, account, page_token) do
+    case load_page(file_api_url, account, page_token) do
       {:ok, files, next_page_token} ->
         if next_page_token do
           %{account: account, page_token: next_page_token}
@@ -48,8 +48,8 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp get_page(url, account, page_token) do
-    case request(url, account, page_token) do
+  defp load_page(url, account, page_token) do
+    case request_page(url, account, page_token) do
       {:ok, data} ->
         files =
           case data["files"] do
@@ -69,26 +69,9 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp request(url, account, page_token) do
-    # TODO Check if this cover files shared with an address that is external
-    # to the domain
-    filter = ~w[
-      visibility='anyoneCanFind'
-      or
-      visibility='anyoneWithLink'
-    ] |> Enum.join(" ")
-
-    parameters =
-      case page_token do
-        nil -> @query_parameters
-        _ -> Map.put(@query_parameters, "pageToken", page_token)
-      end
-
-    parameters = Map.put(parameters, "q", filter)
-
+  defp request_page(url, account, page_token) do
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
-         headers = [{"Authorization", "Bearer #{bearer_token}"}],
-         {:ok, %{data: data, status: 200}} <- get(url, parameters, headers),
+         {:ok, %{data: data, status: 200}} <- call_drive_api(url, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       {:ok, json}
     else
@@ -110,10 +93,27 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp get(url, parameters, headers) do
+  defp call_drive_api(url, page_token, bearer_token) do
     t0 = Time.utc_now()
 
+    # TODO Check if this cover files shared with an address that is external
+    # to the domain
+    filter = ~w[
+      visibility='anyoneCanFind'
+      or
+      visibility='anyoneWithLink'
+    ] |> Enum.join(" ")
+
+    parameters =
+      case page_token do
+        nil -> @query_parameters
+        _ -> Map.put(@query_parameters, "pageToken", page_token)
+      end
+
+    parameters = Map.put(parameters, "q", filter)
+
     path = "/drive/v3/files?#{URI.encode_query(parameters)}"
+    headers = [{"Authorization", "Bearer #{bearer_token}"}]
     res = Xomium.MintHttp.get(url, path, headers)
 
     time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
