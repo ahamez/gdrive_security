@@ -1,7 +1,15 @@
 defmodule Xomium.MintHttp do
-  @moduledoc false
+  @moduledoc """
+  Module responsible for handling blocking HTTP connections using Mint.
+
+  Adapted from https://hexdocs.pm/mint/architecture.html#wrapping-a-mint-connection-in-a-genserver.
+  """
+
+  # TODO Verify that non-secure or bad HTTPS connections are refused.
 
   @behaviour Xomium.HttpClient
+
+  @request_timeout :timer.seconds(60 * 2)
 
   use GenServer
   require Logger
@@ -36,7 +44,7 @@ defmodule Xomium.MintHttp do
   defp request(method, url, path, headers, body) do
     url
     |> Xomium.MintHttpCache.server_process()
-    |> GenServer.call({:request, method, path, headers, body}, :timer.seconds(60 * 3))
+    |> GenServer.call({:request, method, path, headers, body}, @request_timeout)
   end
 
   @impl true
