@@ -33,12 +33,13 @@ defmodule Xomium.Google.Files do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
 
     case load_page(file_api_url, account, page_token) do
+      {:ok, files, nil} ->
+        {:ok, files}
+
       {:ok, files, next_page_token} ->
-        if next_page_token do
-          %{account: account, page_token: next_page_token}
-          |> Xomium.ListFilesWorker.new()
-          |> Oban.insert()
-        end
+        %{account: account, page_token: next_page_token}
+        |> Xomium.ListFilesWorker.new()
+        |> Oban.insert()
 
         {:ok, files}
 
