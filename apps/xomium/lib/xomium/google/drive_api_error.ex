@@ -33,7 +33,7 @@ defmodule Xomium.Google.DriveApiError do
   defp status_to_atom(500), do: :internal_server_error
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def reason_text_to_atom(%{"error" => %{"errors" => [%{"reason" => reason}]}}) do
+  defp reason_text_to_atom(%{"error" => %{"errors" => [%{"reason" => reason}]}}) do
     case reason do
       "authError" -> :auth_error
       "backendError" -> :backend_error
@@ -48,7 +48,7 @@ defmodule Xomium.Google.DriveApiError do
     end
   end
 
-  def reason_text_to_atom(_) do
+  defp reason_text_to_atom(_) do
     :unknown
   end
 end
