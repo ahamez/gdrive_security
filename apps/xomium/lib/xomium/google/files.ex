@@ -51,17 +51,8 @@ defmodule Xomium.Google.Files do
   defp load_page(url, account, page_token) do
     case request_page(url, account, page_token) do
       {:ok, data} ->
-        files =
-          case data["files"] do
-            nil ->
-              Logger.debug("Empty data[files] for #{account}")
-              %{}
-
-            files ->
-              Logger.debug("Received #{length(files)} files for #{account}")
-              files
-          end
-
+        files = data["files"] || []
+        Logger.debug("Received #{length(files)} files for #{account}")
         {:ok, files, data["nextPageToken"]}
 
       {:error, reason} ->
