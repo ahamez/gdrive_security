@@ -1,3 +1,5 @@
+# Loaded at compile time.
+
 import Config
 
 # Configure Mix tasks and generators

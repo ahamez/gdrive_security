@@ -1,3 +1,5 @@
+# Loaded at compile time.
+
 import Config
 
 # Do not print debug messages in production
