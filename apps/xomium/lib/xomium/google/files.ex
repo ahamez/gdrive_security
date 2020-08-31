@@ -13,7 +13,7 @@ defmodule Xomium.Google.Files do
                   "name",
                   "owners(emailAddress)",
                   "permissions(type,emailAddress)",
-                  # "parents",
+                  "parents",
                   "webViewLink",
                   "shared",
                   "writersCanShare"
