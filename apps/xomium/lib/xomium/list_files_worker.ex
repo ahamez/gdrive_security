@@ -31,7 +31,7 @@ defmodule Xomium.ListFilesWorker do
         Logger.error(Exception.message(error))
         {:discard, error}
 
-      {:error, error = %DriveApiError{reason: {:unauthorized, :aut_error}}} ->
+      {:error, error = %DriveApiError{reason: {:unauthorized, :auth_error}}} ->
         Logger.warn("Authentication error for #{account}. Resetting access token.")
         :ok = Xomium.Google.AccessToken.delete(account)
         {:error, error}
