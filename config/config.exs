@@ -6,6 +6,18 @@ import Config
 config :xomium,
   ecto_repos: [Xomium.Repo]
 
+config :xomium,
+  google_secret_pem_path: {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH"},
+  google_oauth_api_url: "oauth2.googleapis.com",
+  google_file_api_url: "www.googleapis.com",
+  http_timeout: :timer.minutes(2)
+
+config :xomium, Oban,
+  repo: Xomium.Repo,
+  prefix: "jobs",
+  plugins: [Oban.Plugins.Pruner],
+  queues: [http_requests: 10]
+
 config :xomium_web,
   ecto_repos: [Xomium.Repo],
   generators: [context_app: :xomium]
@@ -25,9 +37,6 @@ config :logger, :console,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-
-config :xomium,
-  google_secret_pem_path: {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH"}
 
 # Configure git hooks
 if Mix.env() != :prod do
@@ -50,12 +59,6 @@ if Mix.env() != :prod do
       ]
     ]
 end
-
-config :xomium, Oban,
-  repo: Xomium.Repo,
-  prefix: "jobs",
-  plugins: [Oban.Plugins.Pruner],
-  queues: [http_requests: 10]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

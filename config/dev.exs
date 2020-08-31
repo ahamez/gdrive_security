@@ -11,6 +11,10 @@ config :xomium, Xomium.Repo,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
 
+config :xomium,
+  google_secret_pem_path: Path.expand("../google_secret.pem", __DIR__),
+  issuer: "xomium-dev@xomium-dev.iam.gserviceaccount.com"
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -53,8 +57,3 @@ config :phoenix, :plug_init_mode, :runtime
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20
 
-config :xomium,
-  google_oauth_api_url: "oauth2.googleapis.com",
-  google_file_api_url: "www.googleapis.com",
-  google_secret_pem_path: Path.expand("../google_secret.pem", __DIR__),
-  issuer: "xomium-dev@xomium-dev.iam.gserviceaccount.com"
