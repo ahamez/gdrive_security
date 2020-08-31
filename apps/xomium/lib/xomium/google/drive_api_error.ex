@@ -22,7 +22,8 @@ defmodule Xomium.Google.DriveApiError do
 
   @spec message(t()) :: binary()
   def message(error) do
-    "#{inspect(error.reason)}"
+    # TODO One-line output
+    "#{inspect(error.reason)} #{inspect(error.json)}"
   end
 
   defp status_to_atom(400), do: :bad_request
