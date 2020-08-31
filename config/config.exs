@@ -7,10 +7,11 @@ config :xomium,
   ecto_repos: [Xomium.Repo]
 
 config :xomium,
-  google_secret_pem_path: {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH"},
+  google_secret_pem_path:
+    {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH", [type: :string, required: true]},
   google_oauth_api_url: "oauth2.googleapis.com",
   google_file_api_url: "www.googleapis.com",
-  http_timeout: :timer.minutes(2)
+  http_timeout: {:env, "XOMIUM_HTTP_TIMEOUT", [type: :integer, default: :timer.minutes(2)]}
 
 config :xomium, Oban,
   repo: Xomium.Repo,
