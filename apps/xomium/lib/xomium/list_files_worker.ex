@@ -45,6 +45,10 @@ defmodule Xomium.ListFilesWorker do
         Logger.error("Invalid account #{account}")
         {:discard, error}
 
+      {:error, error = %OauthApiError{reason: :invalid_signature}} ->
+        Logger.error("Invalid private key")
+        {:discard, error}
+
       {:error, error} ->
         Logger.warn("#{inspect(error)}")
         {:error, error}

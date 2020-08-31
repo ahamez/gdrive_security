@@ -20,6 +20,9 @@ defmodule Xomium.Google.OauthApiError do
         {"invalid_grant", "Invalid email or User ID"} ->
           :invalid_email_or_user_id
 
+        {"invalid_grant", "java.security.SignatureException: Invalid signature" <> _} ->
+          :invalid_signature
+
         other ->
           other
       end
