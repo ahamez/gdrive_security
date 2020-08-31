@@ -8,10 +8,10 @@ defmodule Xomium.Application do
     conf = configure()
 
     children = [
-      {Oban, conf.oban},
+      {Oban, Application.get_env(:xomium, Oban)},
       {Phoenix.PubSub, [name: Xomium.PubSub]},
       Xomium.Repo,
-      {Xomium.Secrets, [name: :secrets, google_secret_pem_path: conf.google_secret_pem_path]},
+      {Xomium.Secrets, [name: :secrets, conf: conf]},
       Xomium.ProcessRegistry,
       Xomium.MintHttpCache,
       Xomium.Google.AccessToken
@@ -20,22 +20,21 @@ defmodule Xomium.Application do
     Supervisor.start_link(children, strategy: :one_for_one, name: Xomium.Supervisor)
   end
 
-  defp configure() do
+  def configure() do
     config =
       %{}
       |> load(:google_secret_pem_path)
       |> load(:google_oauth_api_url)
       |> load(:google_file_api_url)
-      |> load(Oban, :oban)
+      |> load(:google_issuer)
+      |> load(:http_timeout)
 
     Logger.debug("#{inspect(config)}")
 
     config
   end
 
-  defp load(config, key), do: load(config, key, key)
-
-  defp load(config, key, config_key) do
+  defp load(config, key) do
     value =
       case Application.get_env(:xomium, key) do
         {:env, var, opts} ->
@@ -61,6 +60,9 @@ defmodule Xomium.Application do
           value
       end
 
-    Map.put(config, config_key, value)
+    # We transform keys into strings as Oban will deserialize back the configuration to
+    # workers with keys as strings: https://hexdocs.pm/oban/Oban.html#module-defining-workers
+    # We thus have to lookup a configuration entry via "foo" rather than :foo.
+    Map.put(config, Atom.to_string(key), value)
   end
 end

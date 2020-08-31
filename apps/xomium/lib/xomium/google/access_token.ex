@@ -34,10 +34,10 @@ defmodule Xomium.Google.AccessToken do
     )
   end
 
-  @spec get(binary()) :: {:ok, binary()} | {:error, any}
-  def get(account) do
+  @spec get(map(), binary()) :: {:ok, binary()} | {:error, any}
+  def get(conf, account) do
     ConCache.fetch_or_store(:access_token_cache, account, fn ->
-      request(account)
+      request(conf, account)
     end)
   end
 
@@ -46,15 +46,14 @@ defmodule Xomium.Google.AccessToken do
     ConCache.delete(:access_token_cache, account)
   end
 
-  defp request(account) do
+  defp request(conf, account) do
     Logger.debug("Renewing access token for #{account}")
 
     secret = Xomium.Secrets.get(:secrets, :google)
-    issuer = Application.fetch_env!(:xomium, :issuer)
-    oauth_api_url = Application.fetch_env!(:xomium, :google_oauth_api_url)
-    request_body = make_query(secret, issuer, account)
 
-    with {:ok, %{data: data}} <- post_request(oauth_api_url, request_body),
+    request_body = make_query(secret, conf["google_issuer"], account)
+
+    with {:ok, %{data: data}} <- post_request(conf, request_body),
          {:ok, json} <- Jason.decode(data),
          {:ok, access_token} <- get_access_token(json) do
       {:ok, access_token}
@@ -68,12 +67,13 @@ defmodule Xomium.Google.AccessToken do
     })
   end
 
-  defp post_request(url, token_request_body) do
+  defp post_request(conf, token_request_body) do
     Xomium.MintHttp.post(
-      url,
+      conf["google_oauth_api_url"],
       "/token",
       [{"Content-Type", "application/x-www-form-urlencoded"}],
-      token_request_body
+      token_request_body,
+      conf["http_timeout"]
     )
   end
 

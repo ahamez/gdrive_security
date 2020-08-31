@@ -13,7 +13,7 @@ config :xomium, Xomium.Repo,
 
 config :xomium,
   google_secret_pem_path: Path.expand("../google_secret.pem", __DIR__),
-  issuer: "xomium-dev@xomium-dev.iam.gserviceaccount.com"
+  google_issuer: "xomium-dev@xomium-dev.iam.gserviceaccount.com"
 
 # For development, we disable any cache and enable
 # debugging and code reloading.

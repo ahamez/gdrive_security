@@ -9,8 +9,6 @@ defmodule Xomium.MintHttp do
 
   @behaviour Xomium.HttpClient
 
-  @request_timeout :timer.seconds(60 * 2)
-
   use GenServer
   require Logger
 
@@ -27,13 +25,13 @@ defmodule Xomium.MintHttp do
   end
 
   @impl true
-  def get(url, path, headers) do
-    request("GET", url, path, headers, "")
+  def get(url, path, headers, timeout) do
+    request("GET", url, path, headers, "", timeout)
   end
 
   @impl true
-  def post(url, path, headers, body) do
-    request("POST", url, path, headers, body)
+  def post(url, path, headers, body, timeout) do
+    request("POST", url, path, headers, body, timeout)
   end
 
   @impl true
@@ -41,10 +39,10 @@ defmodule Xomium.MintHttp do
     {:ok, %__MODULE__{host: host}}
   end
 
-  defp request(method, url, path, headers, body) do
+  defp request(method, url, path, headers, body, timeout) do
     url
     |> Xomium.MintHttpCache.server_process()
-    |> GenServer.call({:request, method, path, headers, body}, @request_timeout)
+    |> GenServer.call({:request, method, path, headers, body}, timeout)
   end
 
   @impl true

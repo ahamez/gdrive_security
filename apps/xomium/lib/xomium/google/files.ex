@@ -28,11 +28,9 @@ defmodule Xomium.Google.Files do
     "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
   }
 
-  @spec list(binary(), binary() | nil) :: {:ok, list(), binary() | nil} | {:error, any()}
-  def list(account, page_token) do
-    file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
-
-    case load_page(file_api_url, account, page_token) do
+  @spec list(map(), binary(), binary() | nil) :: {:ok, list(), binary() | nil} | {:error, any()}
+  def list(conf, account, page_token) do
+    case load_page(conf, account, page_token) do
       {:ok, files, next_page_token} ->
         {:ok, files, next_page_token}
 
@@ -42,9 +40,9 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp load_page(url, account, page_token) do
-    with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
-         {:ok, data} <- call_drive_api(url, page_token, bearer_token),
+  defp load_page(conf, account, page_token) do
+    with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(conf, account),
+         {:ok, data} <- call_drive_api(conf, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       files = json["files"] || []
       # TODO metric for number of received files
@@ -53,7 +51,7 @@ defmodule Xomium.Google.Files do
     end
   end
 
-  defp call_drive_api(url, page_token, bearer_token) do
+  defp call_drive_api(conf, page_token, bearer_token) do
     # TODO metric for time spent
     t0 = Time.utc_now()
 
@@ -76,8 +74,11 @@ defmodule Xomium.Google.Files do
     path = "/drive/v3/files?#{URI.encode_query(parameters)}"
     headers = [{"Authorization", "Bearer #{bearer_token}"}]
 
+    url = conf["google_file_api_url"]
+    timeout = conf["http_timeout"]
+
     res =
-      case Xomium.MintHttp.get(url, path, headers) do
+      case Xomium.MintHttp.get(url, path, headers, timeout) do
         {:ok, %{data: data, status: 200}} ->
           {:ok, data}
 

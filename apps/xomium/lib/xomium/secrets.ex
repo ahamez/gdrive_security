@@ -6,7 +6,8 @@ defmodule Xomium.Secrets do
   use Agent
 
   def start_link(opts) do
-    {google_secret_pem_path, opts} = Keyword.pop!(opts, :google_secret_pem_path)
+    {conf, opts} = Keyword.pop!(opts, :conf)
+    google_secret_pem_path = conf["google_secret_pem_path"]
     google_secret = load_pem(google_secret_pem_path)
 
     Agent.start_link(fn -> %{google: google_secret} end, opts)

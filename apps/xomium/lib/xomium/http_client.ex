@@ -3,13 +3,19 @@ defmodule Xomium.HttpClient do
   Contract for a blocking HTTP client.
   """
 
-  @callback get(url :: binary(), path :: binary(), headers :: [{binary(), binary()}]) ::
+  @callback get(
+              url :: binary(),
+              path :: binary(),
+              headers :: [{binary(), binary()}],
+              timeout :: non_neg_integer()
+            ) ::
               {:ok, map()} | {:error, any()}
 
   @callback post(
               url :: binary(),
               path :: binary(),
               headers :: [{binary(), binary()}],
-              body :: binary()
+              body :: binary(),
+              timeout :: non_neg_integer()
             ) :: {:ok, map()} | {:error, any()}
 end

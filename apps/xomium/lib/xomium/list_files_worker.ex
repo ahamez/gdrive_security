@@ -8,12 +8,14 @@ defmodule Xomium.ListFilesWorker do
   require Logger
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"account" => account, "page_token" => page_token}}) do
+  def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf}}) do
+    page_token = args["page_token"]
+
     alias Xomium.Google.DriveApiError
 
     # TODO Rate limiting
 
-    with {:ok, _files, next_page_token} <- Xomium.Google.Files.list(account, page_token) do
+    with {:ok, _files, next_page_token} <- Xomium.Google.Files.list(conf, account, page_token) do
       # TODO Save files in db
       case next_page_token do
         nil ->
@@ -21,7 +23,7 @@ defmodule Xomium.ListFilesWorker do
           :ok
 
         _ ->
-          %{account: account, page_token: next_page_token}
+          %{account: account, page_token: next_page_token, conf: conf}
           |> Xomium.ListFilesWorker.new()
           |> Oban.insert()
       end
@@ -43,11 +45,6 @@ defmodule Xomium.ListFilesWorker do
         Logger.warn("#{inspect(error)}")
         {:error, error}
     end
-  end
-
-  @impl Oban.Worker
-  def perform(job) do
-    perform(put_in(job.args["page_token"], nil))
   end
 
   @impl Oban.Worker
