@@ -1,7 +1,9 @@
 defmodule Xomium.ListFilesWorker do
   @moduledoc false
 
-  use Oban.Worker, queue: :http_requests
+  use Oban.Worker,
+    queue: :http_requests,
+    max_attempts: 10
 
   require Logger
 
