@@ -5,34 +5,41 @@ defmodule Xomium.ListFilesWorker do
 
   require Logger
 
-  alias Xomium.Google.DriveApiError
-
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"account" => account, "page_token" => page_token}}) do
-    case Xomium.Google.Files.list(account, page_token) do
-      {:ok, _files} ->
-        # TODO Save files in db
-        :ok
+    alias Xomium.Google.DriveApiError
 
-      {:error, %DriveApiError{reason: {:not_found, _}}} ->
-        {:discard, :not_found}
+    # TODO Rate limiting
 
-      {:error, %DriveApiError{reason: {:bad_request, reason}}} ->
-        {:discard, {:bad_request, reason}}
+    with {:ok, _files, next_page_token} <- Xomium.Google.Files.list(account, page_token) do
+      # TODO Save files in db
+      case next_page_token do
+        nil ->
+          Logger.debug("End of pages for #{account}")
+          :ok
 
-      {:error, reason = %DriveApiError{reason: {:unauthorized, :aut_error}}} ->
+        _ ->
+          %{account: account, page_token: next_page_token}
+          |> Xomium.ListFilesWorker.new()
+          |> Oban.insert()
+      end
+    else
+      {:error, error = %DriveApiError{reason: {status, _}}}
+      when status in [:not_found, :bad_request] ->
+        Logger.error(Exception.message(error))
+        {:discard, error}
+
+      {:error, error = %DriveApiError{reason: {:unauthorized, :aut_error}}} ->
         Logger.warn("Authentication error for #{account}. Resetting access token.")
         :ok = Xomium.Google.AccessToken.delete(account)
-        {:error, reason}
+        {:error, error}
 
       {:error, :invalid_email_or_user_id} ->
         {:discard, :invalid_email_or_user_id}
 
-      # TODO snooze when daily limit or other limits are reached
-      # {:error, {:forbidden, :daily_limit_exceeded}}
-
-      {:error, reason} ->
-        {:error, reason}
+      {:error, error} ->
+        Logger.warn("#{inspect(error)}")
+        {:error, error}
     end
   end
 
@@ -43,7 +50,7 @@ defmodule Xomium.ListFilesWorker do
 
   @impl Oban.Worker
   def timeout(_job) do
-    :timer.seconds(60)
+    :timer.minutes(5)
   end
 
   @impl Oban.Worker

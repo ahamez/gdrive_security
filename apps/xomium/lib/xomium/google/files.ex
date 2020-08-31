@@ -28,20 +28,13 @@ defmodule Xomium.Google.Files do
     "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
   }
 
-  @spec list(binary(), binary() | nil) :: {:ok, %{}} | {:error, any}
+  @spec list(binary(), binary() | nil) :: {:ok, list(), binary() | nil} | {:error, any()}
   def list(account, page_token) do
     file_api_url = Application.fetch_env!(:xomium, :google_file_api_url)
 
     case load_page(file_api_url, account, page_token) do
-      {:ok, files, nil} ->
-        {:ok, files}
-
       {:ok, files, next_page_token} ->
-        %{account: account, page_token: next_page_token}
-        |> Xomium.ListFilesWorker.new()
-        |> Oban.insert()
-
-        {:ok, files}
+        {:ok, files, next_page_token}
 
       {:error, reason} ->
         Logger.warn("Cannot retrieve files for #{account}: #{inspect(reason)}")
@@ -50,26 +43,18 @@ defmodule Xomium.Google.Files do
   end
 
   defp load_page(url, account, page_token) do
-    case request_page(url, account, page_token) do
-      {:ok, data} ->
-        files = data["files"] || []
-        Logger.debug("Received #{length(files)} files for #{account}")
-        {:ok, files, data["nextPageToken"]}
-
-      {:error, reason} ->
-        {:error, reason}
-    end
-  end
-
-  defp request_page(url, account, page_token) do
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(account),
          {:ok, data} <- call_drive_api(url, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
-      {:ok, json}
+      files = json["files"] || []
+      # TODO metric for number of received files
+      Logger.debug("Received #{length(files)} files for #{account}")
+      {:ok, files, json["nextPageToken"]}
     end
   end
 
   defp call_drive_api(url, page_token, bearer_token) do
+    # TODO metric for time spent
     t0 = Time.utc_now()
 
     # TODO Check if this cover files shared with an address that is external
