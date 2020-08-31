@@ -8,8 +8,7 @@ defmodule Xomium.HttpClient do
               path :: binary(),
               headers :: [{binary(), binary()}],
               timeout :: non_neg_integer()
-            ) ::
-              {:ok, map()} | {:error, any()}
+            ) :: {:ok, map()} | {:error, any()}
 
   @callback post(
               url :: binary(),
