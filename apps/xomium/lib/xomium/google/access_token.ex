@@ -83,19 +83,7 @@ defmodule Xomium.Google.AccessToken do
         {:ok, access_token}
 
       :error ->
-        error = json["error"]
-        error_description = json["error_description"]
-
-        reason =
-          case {error, error_description} do
-            {"invalid_grant", "Invalid email or User ID"} ->
-              :invalid_email_or_user_id
-
-            other ->
-              other
-          end
-
-        {:error, reason}
+        {:error, Xomium.Google.OauthApiError.new(json)}
     end
   end
 end

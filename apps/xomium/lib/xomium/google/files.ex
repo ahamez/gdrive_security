@@ -35,7 +35,6 @@ defmodule Xomium.Google.Files do
         {:ok, files, next_page_token}
 
       {:error, reason} ->
-        Logger.warn("Cannot retrieve files for #{account}: #{inspect(reason)}")
         {:error, reason}
     end
   end

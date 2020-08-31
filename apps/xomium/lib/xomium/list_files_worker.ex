@@ -11,7 +11,10 @@ defmodule Xomium.ListFilesWorker do
   def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf}}) do
     page_token = args["page_token"]
 
-    alias Xomium.Google.DriveApiError
+    alias Xomium.Google.{
+      DriveApiError,
+      OauthApiError
+    }
 
     # TODO Rate limiting
 
@@ -38,8 +41,9 @@ defmodule Xomium.ListFilesWorker do
         :ok = Xomium.Google.AccessToken.delete(account)
         {:error, error}
 
-      {:error, :invalid_email_or_user_id} ->
-        {:discard, :invalid_email_or_user_id}
+      {:error, error = %OauthApiError{reason: :invalid_email_or_user_id}} ->
+        Logger.error("Invalid account #{account}")
+        {:discard, error}
 
       {:error, error} ->
         Logger.warn("#{inspect(error)}")
