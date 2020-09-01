@@ -9,6 +9,7 @@ defmodule Xomium.Umbrella.MixProject do
       deps: deps(),
       aliases: aliases(),
       elixir: "~> 1.10",
+      test_coverage: [tool: ExCoveralls],
       releases: [
         xomium_umbrella: [
           version: "0.1.0",
