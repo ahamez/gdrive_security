@@ -17,7 +17,7 @@ config :xomium, Oban,
   repo: Xomium.Repo,
   prefix: "jobs",
   plugins: [Oban.Plugins.Pruner],
-  queues: [http_requests: 10]
+  queues: [http_requests: 20]
 
 config :xomium_web,
   ecto_repos: [Xomium.Repo],
