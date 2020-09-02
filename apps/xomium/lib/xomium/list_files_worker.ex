@@ -1,5 +1,12 @@
 defmodule Xomium.ListFilesWorker do
-  @moduledoc false
+  @moduledoc """
+  This module defines a job to be scheduled by the Oban library. Its goal is
+  to fetch files from the Google Drive API.
+
+  Note that the default setting of Oban is an infinite timeout. However,
+  some tasks launched by this worker might timeout (HTTP client) and thus interrupt
+  this job.
+  """
 
   use Oban.Worker,
     queue: :http_requests,
@@ -53,11 +60,6 @@ defmodule Xomium.ListFilesWorker do
         Logger.warn("#{inspect(error)}")
         {:error, error}
     end
-  end
-
-  @impl Oban.Worker
-  def timeout(_job) do
-    :timer.minutes(5)
   end
 
   @impl Oban.Worker
