@@ -44,14 +44,12 @@ defmodule Xomium.Google.Files do
          {:ok, data} <- call_drive_api(conf, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       files = json["files"] || []
-      # TODO metric for number of received files
-      Logger.debug("Received #{length(files)} files for #{account}")
+      :telemetry.execute([:xomium, :google, :files, :load_page], %{files: length(files)})
       {:ok, files, json["nextPageToken"]}
     end
   end
 
   defp call_drive_api(conf, page_token, bearer_token) do
-    # TODO metric for time spent
     t0 = Time.utc_now()
 
     # TODO Check if this cover files shared with an address that is external
@@ -89,7 +87,8 @@ defmodule Xomium.Google.Files do
       end
 
     time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
-    Logger.debug("List files request processed in #{time}s")
+    :telemetry.execute([:xomium, :google, :files, :call_drive_api], %{time: time})
+    :telemetry.execute([:xomium, :google, :files], %{requests: 1})
 
     res
   end
