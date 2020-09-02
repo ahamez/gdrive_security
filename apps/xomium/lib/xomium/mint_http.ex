@@ -2,27 +2,22 @@ defmodule Xomium.MintHttp do
   @moduledoc """
   Module responsible for handling blocking HTTP connections using Mint.
 
-  Adapted from https://hexdocs.pm/mint/architecture.html#wrapping-a-mint-connection-in-a-genserver.
+  Process-less HTTP client: each job opens a connection to Google API
+
+  The previous architecture had a problem when requests multiplexed in a HTTP2 connection timed
+  out (it's not clear if it's due to Google API or the Mint library).
+  The server returned %Mint.HTTPError{module: Mint.HTTP2, reason: :too_many_concurrent_requests}.
+  In other words, as some requests stalled, new ones were created until we reached the max allowed
+   by the server (100 in this case).
+
+  While it's obvious that we should reuse connections, this simple architecture now works.
+  If/when we encountered performance issues, it will be the time to devise a pool-based connection,
+  maybe using a higher-level library. other than Mint
+
+  TODO Verify that non-secure or bad HTTPS connections are refused.
   """
 
-  # TODO Verify that non-secure or bad HTTPS connections are refused.
-
   @behaviour Xomium.HttpClient
-
-  use GenServer
-  require Logger
-
-  defstruct host: nil,
-            conn: nil,
-            requests: %{}
-
-  def start_link(host) do
-    GenServer.start_link(__MODULE__, host, name: via_tuple(host))
-  end
-
-  defp via_tuple(host) do
-    Xomium.ProcessRegistry.via_tuple({__MODULE__, host})
-  end
 
   @impl true
   def get(url, path, headers, timeout) do
@@ -34,105 +29,40 @@ defmodule Xomium.MintHttp do
     request("POST", url, path, headers, body, timeout)
   end
 
-  @impl true
-  def init(host) do
-    {:ok, %__MODULE__{host: host}}
-  end
-
   defp request(method, url, path, headers, body, timeout) do
-    url
-    |> Xomium.MintHttpCache.server_process()
-    |> GenServer.call({:request, method, path, headers, body}, timeout)
-  end
-
-  @impl true
-  def handle_call({:request, method, path, headers, body}, from, state) do
-    {:ok, state} = connect(state)
-
-    case Mint.HTTP.request(state.conn, method, path, headers, body) do
-      {:ok, conn, request_ref} ->
-        state = put_in(state.conn, conn)
-        state = put_in(state.requests[request_ref], %{from: from, response: %{}})
-        {:noreply, state}
-
-      {:error, conn, reason} ->
-        state = put_in(state.conn, conn)
-        {:reply, {:error, reason}, state}
+    with {:ok, conn} <- Mint.HTTP.connect(:https, url, 443, mode: :passive),
+         {:ok, conn, _request_ref} <- Mint.HTTP.request(conn, method, path, headers, body) do
+      recv(%{}, conn, timeout)
     end
   end
 
-  @impl true
-  def handle_info(msg, state) do
-    case Mint.HTTP.stream(state.conn, msg) do
-      :unknown ->
-        Logger.error("#{__MODULE__} received unknown message #{inspect(msg)}")
-        {:noreply, state}
-
-      {:ok, conn, responses} ->
-        state = put_in(state.conn, conn)
-        state = Enum.reduce(responses, state, &process_response/2)
-        {:noreply, state}
-
-      {:error, _conn, reason, _resp} ->
-        Logger.warn("Connection closed while streaming: #{inspect(reason)}")
-
-        Enum.each(state.requests, fn {_request_ref, %{from: from}} ->
-          GenServer.reply(from, {:error, reason})
-        end)
-
-        {:noreply, state}
+  defp recv(acc, conn, timeout) do
+    with {:ok, conn, responses} <- Mint.HTTP.recv(conn, 0, timeout) do
+      case Enum.reduce(responses, acc, &handle_response/2) do
+        {:done, acc} -> {:ok, acc}
+        {:error, reason} -> {:error, reason}
+        acc -> recv(acc, conn, timeout)
+      end
     end
   end
 
-  defp connect(state = %__MODULE__{conn: nil}) do
-    case Mint.HTTP.connect(:https, state.host, 443) do
-      {:ok, conn} ->
-        state = put_in(state.conn, conn)
-        {:ok, state}
-
-      {:error, reason} ->
-        Logger.warn("Cannot connect: #{Exception.message(reason)}")
-        {:error, reason}
-    end
+  defp handle_response({:status, _request_ref, status}, acc) do
+    Map.put(acc, :status, status)
   end
 
-  defp connect(state) do
-    case Mint.HTTP.open?(state.conn) do
-      true ->
-        {:ok, state}
-
-      false ->
-        Logger.warn("#{state.host} disconnected. Reset connection")
-        connect(%{state | conn: nil})
-    end
+  defp handle_response({:headers, _request_ref, headers}, acc) do
+    Map.update(acc, :headers, headers, fn previous -> previous ++ headers end)
   end
 
-  defp process_response({:status, request_ref, status}, state) do
-    put_in(state.requests[request_ref].response[:status], status)
+  defp handle_response({:data, _request_ref, data}, acc) do
+    Map.update(acc, :data, data, fn previous -> previous <> data end)
   end
 
-  defp process_response({:headers, request_ref, headers}, state) do
-    put_in(state.requests[request_ref].response[:headers], headers)
+  defp handle_response({:done, _request_ref}, acc) do
+    {:done, acc}
   end
 
-  defp process_response({:data, request_ref, new_data}, state) do
-    update_in(
-      state.requests[request_ref].response[:data],
-      fn data -> (data || "") <> new_data end
-    )
-  end
-
-  defp process_response({:error, request_ref, reason}, state) do
-    {%{from: from}, state} = pop_in(state.requests[request_ref])
-    GenServer.reply(from, {:error, reason})
-
-    state
-  end
-
-  defp process_response({:done, request_ref}, state) do
-    {%{response: response, from: from}, state} = pop_in(state.requests[request_ref])
-    GenServer.reply(from, {:ok, response})
-
-    state
+  defp handle_response({:error, _request_ref, reason}, _acc) do
+    {:error, reason}
   end
 end

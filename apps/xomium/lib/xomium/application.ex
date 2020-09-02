@@ -12,8 +12,6 @@ defmodule Xomium.Application do
       {Phoenix.PubSub, [name: Xomium.PubSub]},
       Xomium.Repo,
       {Xomium.Secrets, [name: :secrets, conf: conf]},
-      Xomium.ProcessRegistry,
-      Xomium.MintHttpCache,
       Xomium.Google.AccessToken
     ]
 
