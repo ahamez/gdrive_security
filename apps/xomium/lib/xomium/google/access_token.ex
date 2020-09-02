@@ -7,7 +7,7 @@ defmodule Xomium.Google.AccessToken do
 
   # 3600 seconds: max TTL authorized by Google.
   @ttl 3600
-  @cache_ttl 1800
+  @cache_ttl 3300
   @scopes [
     "https://www.googleapis.com/auth/drive.metadata",
     "https://www.googleapis.com/auth/drive.readonly",
