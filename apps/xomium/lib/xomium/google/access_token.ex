@@ -73,7 +73,7 @@ defmodule Xomium.Google.AccessToken do
       "/token",
       [{"Content-Type", "application/x-www-form-urlencoded"}],
       token_request_body,
-      conf["http_timeout"]
+      timeout: conf["http_timeout"]
     )
   end
 

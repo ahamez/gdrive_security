@@ -20,17 +20,21 @@ defmodule Xomium.MintHttp do
   @behaviour Xomium.HttpClient
 
   @impl true
-  def get(url, path, headers, timeout) do
-    request("GET", url, path, headers, "", timeout)
+  def get(url, path, headers, opts \\ []) do
+    request("GET", url, path, headers, "", opts)
   end
 
   @impl true
-  def post(url, path, headers, body, timeout) do
-    request("POST", url, path, headers, body, timeout)
+  def post(url, path, headers, body, opts \\ []) do
+    request("POST", url, path, headers, body, opts)
   end
 
-  defp request(method, url, path, headers, body, timeout) do
-    with {:ok, conn} <- Mint.HTTP.connect(:https, url, 443, mode: :passive),
+  defp request(method, url, path, headers, body, opts) do
+    {timeout, opts} = Keyword.pop(opts, :timeout, :infinity)
+    {protocol, _} = Keyword.pop(opts, :protocol, :http2)
+
+    with {:ok, conn} <-
+           Mint.HTTP.connect(:https, url, 443, mode: :passive, protocols: [protocol]),
          {:ok, conn, _request_ref} <- Mint.HTTP.request(conn, method, path, headers, body) do
       recv(%{}, conn, timeout)
     end

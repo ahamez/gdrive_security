@@ -75,7 +75,7 @@ defmodule Xomium.Google.Files do
     timeout = conf["http_timeout"]
 
     res =
-      case Xomium.MintHttp.get(url, path, headers, timeout) do
+      case Xomium.MintHttp.get(url, path, headers, timeout: timeout) do
         {:ok, %{data: data, status: 200}} ->
           {:ok, data}
 
