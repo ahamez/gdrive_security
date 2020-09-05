@@ -54,21 +54,10 @@ defmodule Xomium.Google.Files do
   defp call_drive_api(conf, page_token, bearer_token) do
     t0 = Time.utc_now()
 
-    # TODO Check if this cover files shared with an address that is external
-    # to the domain
-    filter = ~w[
-      visibility='anyoneCanFind'
-      or
-      visibility='anyoneWithLink'
-    ] |> Enum.join(" ")
-
     parameters =
-      case page_token do
-        nil -> @query_parameters
-        _ -> Map.put(@query_parameters, "pageToken", page_token)
-      end
-
-    parameters = Map.put(parameters, "q", filter)
+      @query_parameters
+      |> add_page_token(page_token)
+      |> add_visibility_filter()
 
     path = "#{@path}?#{URI.encode_query(parameters)}"
     headers = [{"Authorization", "Bearer #{bearer_token}"}]
@@ -93,5 +82,20 @@ defmodule Xomium.Google.Files do
     :telemetry.execute([:xomium, :google, :files], %{requests: 1})
 
     res
+  end
+
+  defp add_page_token(params, nil), do: params
+  defp add_page_token(params, page_token), do: Map.put(params, "pageToken", page_token)
+
+  defp add_visibility_filter(params) do
+    # TODO Check if this cover files shared with an address that is external
+    # to the domain
+    filter = ~w[
+      visibility='anyoneCanFind'
+      or
+      visibility='anyoneWithLink'
+    ] |> Enum.join(" ")
+
+    Map.put(params, "q", filter)
   end
 end
