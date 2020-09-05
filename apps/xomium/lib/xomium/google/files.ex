@@ -5,6 +5,8 @@ defmodule Xomium.Google.Files do
 
   require Logger
 
+  @path "/drive/v3/files"
+
   # Some fields have an impact on pageSize, which is be reduced to 100 by Google
   # when requesting "permissions()".
   # See https://stackoverflow.com/a/42831062/21584.
@@ -68,7 +70,7 @@ defmodule Xomium.Google.Files do
 
     parameters = Map.put(parameters, "q", filter)
 
-    path = "/drive/v3/files?#{URI.encode_query(parameters)}"
+    path = "#{@path}?#{URI.encode_query(parameters)}"
     headers = [{"Authorization", "Bearer #{bearer_token}"}]
 
     url = conf["google_file_api_url"]
