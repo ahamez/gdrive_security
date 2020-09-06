@@ -33,7 +33,8 @@ defmodule Xomium.ListFilesWorker do
           :ok
 
         _ ->
-          %{account: account, page_token: next_page_token, conf: conf}
+          args
+          |> Map.put(:page_token, next_page_token)
           |> Xomium.ListFilesWorker.new()
           |> Oban.insert()
       end
