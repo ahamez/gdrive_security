@@ -3,8 +3,6 @@ defmodule Xomium.Google.Files do
   https://developers.google.com/drive/api/v3/reference/files/list
   """
 
-  require Logger
-
   @path "/drive/v3/files"
 
   # Some fields have an impact on pageSize, which is be reduced to 100 by Google
