@@ -16,16 +16,17 @@ defmodule Xomium.ListFilesWorker do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf}}) do
-    page_token = args["page_token"]
-
     alias Xomium.Google.{
       DriveApiError,
+      Files,
       OauthApiError
     }
 
+    page_token = args["page_token"]
+
     # TODO Rate limiting
 
-    with {:ok, _files, next_page_token} <- Xomium.Google.Files.list(conf, account, page_token) do
+    with {:ok, _files, next_page_token} <- Files.list(conf, account, page_token) do
       # TODO Save files in db
       case next_page_token do
         nil ->
