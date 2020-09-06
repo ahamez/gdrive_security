@@ -29,7 +29,7 @@ defmodule Xomium.ListFilesWorker do
       # TODO Save files in db
       case next_page_token do
         nil ->
-          Logger.debug("End of pages for #{account}")
+          Logger.debug("End of files pages for #{account}")
           :ok
 
         _ ->
