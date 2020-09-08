@@ -1,4 +1,4 @@
-defmodule Xomium.ListFilesWorker do
+defmodule Xomium.Worker.ListUserFiles do
   @moduledoc """
   This module defines a job to be scheduled by the Oban library. Its goal is
   to fetch files from the Google Drive API.
@@ -36,7 +36,7 @@ defmodule Xomium.ListFilesWorker do
         _ ->
           args
           |> Map.put(:page_token, next_page_token)
-          |> Xomium.ListFilesWorker.new()
+          |> Xomium.Worker.ListUserFiles.new()
           |> Oban.insert()
       end
     else
