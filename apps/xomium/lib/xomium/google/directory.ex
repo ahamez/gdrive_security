@@ -71,7 +71,11 @@ defmodule Xomium.Google.Directory do
   defp add_domain(params, domain), do: Map.put(params, "domain", domain)
 
   defp add_fields_filter(params) do
-    filter = "users/primaryEmail"
+    # Fields filtering syntax:
+    # https://developers.google.com/admin-sdk/directory/v1/guides/performance#partial
+    # Available fields:
+    # https://developers.google.com/admin-sdk/directory/v1/reference/users
+    filter = "users(id,primaryEmail)"
     Map.put(params, "fields", filter)
   end
 end
