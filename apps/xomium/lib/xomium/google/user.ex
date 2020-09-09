@@ -8,6 +8,7 @@ defmodule Xomium.Google.User do
   schema "users" do
     field(:google_id, :string)
     field(:primary_email, :string)
+    field(:deleted, :boolean)
 
     timestamps()
   end
