@@ -1,4 +1,4 @@
-defmodule Xomium.Google.Files do
+defmodule Xomium.Google.Drive do
   @moduledoc """
   https://developers.google.com/drive/api/v3/reference/files/list
   """
@@ -28,8 +28,8 @@ defmodule Xomium.Google.Files do
     "fields" => "incompleteSearch,nextPageToken,files(#{@files_fields})"
   }
 
-  @spec list(map(), binary(), binary() | nil) :: {:ok, list(), binary() | nil} | {:error, any()}
-  def list(conf, account, page_token) do
+  @spec files(map(), binary(), binary() | nil) :: {:ok, list(), binary() | nil} | {:error, any()}
+  def files(conf, account, page_token) do
     case load_page(conf, account, page_token) do
       {:ok, files, next_page_token} ->
         {:ok, files, next_page_token}
