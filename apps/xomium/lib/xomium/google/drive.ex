@@ -44,7 +44,7 @@ defmodule Xomium.Google.Drive do
          {:ok, data} <- call_drive_api(conf, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       files = json["files"] || []
-      :telemetry.execute([:xomium, :google, :files, :load_page], %{files: length(files)})
+      :telemetry.execute([:xomium, :google, :drive, :load_page], %{files: length(files)})
       {:ok, files, json["nextPageToken"]}
     end
   end
@@ -76,8 +76,8 @@ defmodule Xomium.Google.Drive do
       end
 
     time = Time.diff(Time.utc_now(), t0, :microsecond) / 1_000_000
-    :telemetry.execute([:xomium, :google, :files, :call_drive_api], %{time: time})
-    :telemetry.execute([:xomium, :google, :files], %{requests: 1})
+    :telemetry.execute([:xomium, :google, :drive, :call_drive_api], %{time: time})
+    :telemetry.execute([:xomium, :google, :drive], %{requests: 1})
 
     res
   end
