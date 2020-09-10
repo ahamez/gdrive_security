@@ -5,14 +5,21 @@ defmodule Xomium.Google.Directory do
 
   @path "/admin/directory/v1/users"
 
-  @query_parameters %{
-    "maxResults" => 500
-  }
+  @max_results 500
 
-  @spec users(map(), binary(), binary(), binary() | nil) ::
+  @spec users(
+          map(),
+          {:domain, binary()} | {:customer_id, binary()},
+          binary(),
+          Keyword.t()
+        ) ::
           {:ok, list(), binary() | nil} | {:error, any()}
-  def users(conf, domain, admin_account, page_token) do
-    case load_page(conf, domain, admin_account, page_token) do
+  def users(conf, domain_or_customer_id, admin_account, opts \\ []) do
+    {page_token, opts} = Keyword.pop(opts, :page_token, nil)
+    {max_results, opts} = Keyword.pop(opts, :max_results, @max_results)
+    {fields, _opts} = Keyword.pop(opts, :fields, [])
+
+    case load_page(conf, domain_or_customer_id, admin_account, page_token, max_results, fields) do
       {:ok, users, next_page_token} ->
         {:ok, users, next_page_token}
 
@@ -21,9 +28,17 @@ defmodule Xomium.Google.Directory do
     end
   end
 
-  defp load_page(conf, domain, admin_account, page_token) do
+  defp load_page(conf, domain_or_customer_id, admin_account, page_token, max_results, fields) do
     with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(conf, admin_account),
-         {:ok, data} <- call_directory_api(conf, domain, page_token, bearer_token),
+         {:ok, data} <-
+           call_directory_api(
+             conf,
+             domain_or_customer_id,
+             page_token,
+             bearer_token,
+             max_results,
+             fields
+           ),
          {:ok, json} <- Jason.decode(data) do
       users = json["users"] || []
       :telemetry.execute([:xomium, :google, :users, :load_page], %{users: length(users)})
@@ -31,14 +46,22 @@ defmodule Xomium.Google.Directory do
     end
   end
 
-  defp call_directory_api(conf, domain, page_token, bearer_token) do
+  defp call_directory_api(
+         conf,
+         domain_or_customer_id,
+         page_token,
+         bearer_token,
+         max_results,
+         fields
+       ) do
     t0 = Time.utc_now()
 
     parameters =
-      @query_parameters
+      %{}
+      |> add_max_results(max_results)
       |> add_page_token(page_token)
-      |> add_domain(domain)
-      |> add_fields_filter()
+      |> add_domain_or_customer_id(domain_or_customer_id)
+      |> add_fields_filter(fields)
 
     path = "#{@path}?#{URI.encode_query(parameters)}"
     headers = [{"Authorization", "Bearer #{bearer_token}"}]
@@ -65,17 +88,25 @@ defmodule Xomium.Google.Directory do
     res
   end
 
+  defp add_max_results(params, value), do: Map.put(params, "maxResults", value)
+
   defp add_page_token(params, nil), do: params
   defp add_page_token(params, page_token), do: Map.put(params, "pageToken", page_token)
 
-  defp add_domain(params, domain), do: Map.put(params, "domain", domain)
+  defp add_domain_or_customer_id(params, {:domain, domain}) do
+    Map.put(params, "domain", domain)
+  end
 
-  defp add_fields_filter(params) do
+  defp add_domain_or_customer_id(params, {:customer_id, customer_id}) do
+    Map.put(params, "customerId", customer_id)
+  end
+
+  defp add_fields_filter(params, fields) do
     # Fields filtering syntax:
     # https://developers.google.com/admin-sdk/directory/v1/guides/performance#partial
     # Available fields:
     # https://developers.google.com/admin-sdk/directory/v1/reference/users
-    filter = "users(id,primaryEmail)"
+    filter = "users(id,primaryEmail,#{Enum.join(fields, ",")})"
     Map.put(params, "fields", filter)
   end
 end

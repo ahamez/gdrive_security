@@ -1,4 +1,4 @@
-defmodule Xomium.Repo.Migrations.AddPrefixedObanJobsTable do
+defmodule Xomium.Repo.Migrations.CreatePrefixedObanJobsTable do
   use Ecto.Migration
 
   def up do

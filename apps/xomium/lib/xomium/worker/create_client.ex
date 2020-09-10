@@ -15,6 +15,10 @@ defmodule Xomium.Worker.CreateClient do
         Logger.debug("Initial state")
         init(args)
 
+      "list_users" ->
+        Logger.debug("List users state")
+        list_users(args)
+
       "list_files" ->
         Logger.debug("List files state")
         list_files(args)
@@ -34,7 +38,7 @@ defmodule Xomium.Worker.CreateClient do
     with {:ok, prefix} <- Xomium.Tenant.create_tenant(args["domain"]) do
       next_args =
         args
-        |> Map.put("state", "list_files")
+        |> Map.put("state", "list_users")
         |> Map.put("prefix", prefix)
 
       %{
@@ -45,9 +49,34 @@ defmodule Xomium.Worker.CreateClient do
         "next_args" => next_args,
         "prefix" => prefix
       }
-      |> Worker.ListUsers.new()
+      |> Worker.GetCustomerId.new()
       |> Oban.insert()
     end
+  end
+
+  defp list_users(
+         args = %{
+           "admin_account" => admin,
+           "conf" => conf,
+           "customer_id" => customer_id,
+           "prefix" => prefix
+         }
+       ) do
+    next_args =
+      args
+      |> Map.put("state", "list_files")
+      |> Map.put("prefix", prefix)
+
+    %{
+      "admin_account" => admin,
+      "conf" => conf,
+      "customer_id" => customer_id,
+      "next_worker" => __MODULE__,
+      "next_args" => next_args,
+      "prefix" => prefix
+    }
+    |> Worker.ListUsers.new()
+    |> Oban.insert()
   end
 
   defp list_files(%{"conf" => conf, "prefix" => prefix}) do

@@ -20,7 +20,7 @@ defmodule Xomium.Worker.ListUsers do
           args = %{
             "admin_account" => admin,
             "conf" => conf,
-            "domain" => domain,
+            "customer_id" => customer_id,
             "next_worker" => next_worker,
             "next_args" => next_args,
             "prefix" => prefix
@@ -33,7 +33,8 @@ defmodule Xomium.Worker.ListUsers do
       DirectoryApiError
     }
 
-    with {:ok, users, next_page_token} <- Directory.users(conf, domain, admin, page_token) do
+    with {:ok, users, next_page_token} <-
+           Directory.users(conf, {:customer_id, customer_id}, admin, page_token: page_token) do
       Enum.each(users, fn user ->
         user = %{
           google_id: user["id"],
@@ -48,7 +49,7 @@ defmodule Xomium.Worker.ListUsers do
 
       case next_page_token do
         nil ->
-          Logger.debug("End of users pages for #{domain}")
+          Logger.debug("End of users pages for #{customer_id}")
 
           module = String.to_atom(next_worker)
 
