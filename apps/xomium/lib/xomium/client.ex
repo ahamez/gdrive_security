@@ -4,7 +4,7 @@ defmodule Xomium.Client do
   use Ecto.Schema
 
   schema "clients" do
-    field(:tenant, :string)
+    field(:client, :string)
     field(:google_customer_id, :string)
 
     timestamps()
@@ -14,9 +14,9 @@ defmodule Xomium.Client do
     import Ecto.Changeset
 
     user
-    |> cast(params, [:tenant, :google_customer_id])
-    |> validate_required(:tenant)
-    |> unique_constraint(:tenant)
+    |> cast(params, [:client, :google_customer_id])
+    |> validate_required(:client)
+    |> unique_constraint(:client)
     |> validate_required(:google_customer_id)
     |> unique_constraint(:google_customer_id)
   end

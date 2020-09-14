@@ -9,7 +9,7 @@ defmodule Xomium.Tenant do
 
   @schema_prefix "public"
   schema "tenants" do
-    field(:tenant, :string)
+    field(:client, :string)
     field(:prefix, :string)
 
     timestamps()
@@ -24,12 +24,12 @@ defmodule Xomium.Tenant do
   end
 
   @spec get_prefix(binary()) :: binary() | nil
-  def get_prefix(tenant) when is_binary(tenant) do
+  def get_prefix(client) when is_binary(client) do
     import Ecto.Query
 
     query =
       from t in "tenants",
-        where: t.tenant == ^tenant,
+        where: t.client == ^client,
         select: t.prefix
 
     case Xomium.Repo.all(query) do
@@ -39,30 +39,30 @@ defmodule Xomium.Tenant do
   end
 
   @spec create_tenant(binary()) :: {:ok, binary()} | {:error, any}
-  def create_tenant(tenant) when is_binary(tenant) do
-    prefix = make_prefix(tenant)
+  def create_tenant(client) when is_binary(client) do
+    prefix = make_prefix(client)
 
-    changeset = changeset(%__MODULE__{tenant: tenant, prefix: prefix})
+    changeset = changeset(%__MODULE__{client: client, prefix: prefix})
 
     with true <- changeset.valid?(),
          {:ok, _} <- create_schema(prefix),
          {:ok, _} <- Xomium.Repo.insert(changeset),
          :ok <- create_users_table(prefix) do
-      Logger.info("Created tenant \"#{tenant}\"")
+      Logger.info("Created tenant \"#{client}\"")
       {:ok, prefix}
     end
   end
 
   @spec delete_tenant(binary()) :: :ok | {:error, any}
-  def delete_tenant(tenant) when is_binary(tenant) do
+  def delete_tenant(client) when is_binary(client) do
     import Ecto.Query
 
-    from(t in "tenants", where: t.tenant == ^tenant)
+    from(t in "tenants", where: t.client == ^client)
     |> Xomium.Repo.delete_all()
 
     Ecto.Adapters.SQL.query(
       Xomium.Repo,
-      "DROP SCHEMA \"#{make_prefix(tenant)}\" CASCADE"
+      "DROP SCHEMA \"#{make_prefix(client)}\" CASCADE"
     )
   end
 
@@ -73,14 +73,14 @@ defmodule Xomium.Tenant do
     )
   end
 
-  defp changeset(tenant = %__MODULE__{}, params \\ %{}) do
+  defp changeset(client = %__MODULE__{}, params \\ %{}) do
     import Ecto.Changeset
 
-    tenant
-    |> cast(params, [:tenant, :prefix])
-    |> validate_required(:tenant)
+    client
+    |> cast(params, [:client, :prefix])
+    |> validate_required(:client)
     |> validate_required(:prefix)
-    |> unique_constraint(:tenant)
+    |> unique_constraint(:client)
   end
 
   defp create_users_table(prefix) do
@@ -93,7 +93,7 @@ defmodule Xomium.Tenant do
     )
   end
 
-  defp make_prefix(tenant) do
-    "tenant_#{tenant}"
+  defp make_prefix(client) do
+    "tenant_#{client}"
   end
 end
