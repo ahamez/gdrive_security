@@ -10,6 +10,8 @@ defmodule Xomium.Migrations.CreateFilesTable do
       add(:web_view_link, :string, null: false)
       add(:shared, :boolean, null: false)
       add(:writers_can_share, :boolean, null: false)
+
+      timestamps()
     end
   end
 
