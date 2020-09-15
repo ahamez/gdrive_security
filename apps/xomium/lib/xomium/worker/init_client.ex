@@ -38,7 +38,7 @@ defmodule Xomium.Worker.InitClient do
   end
 
   defp init(args = %{"admin_account" => admin, "conf" => conf, "domain" => domain}) do
-    with {:ok, client} <- Client.create_client(%{client_name: domain, platform: %{}}) do
+    with {:ok, client} <- Client.create_client(%{name: domain, platform: %{}}) do
       next_args =
         args
         |> Map.put("state", "list_users")

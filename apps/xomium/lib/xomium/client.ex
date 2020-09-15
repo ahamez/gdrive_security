@@ -6,7 +6,7 @@ defmodule Xomium.Client do
   @schema_prefix "public"
   @primary_key {:id, :binary_id, autogenerate: true}
   schema "clients" do
-    field(:client_name, :string)
+    field(:name, :string)
     field(:platform, :map)
     field(:tenant, :string)
 
@@ -17,9 +17,9 @@ defmodule Xomium.Client do
     import Ecto.Changeset
 
     user
-    |> cast(params, [:client_name, :platform])
-    |> validate_required(:client_name)
-    |> unique_constraint(:client_name)
+    |> cast(params, [:name, :platform, :tenant])
+    |> validate_required(:name)
+    |> unique_constraint(:name)
     |> validate_required(:platform)
   end
 
