@@ -15,7 +15,7 @@ defmodule Xomium.Worker.ListUserFiles do
   require Logger
 
   @impl Oban.Worker
-  def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf}}) do
+  def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf, "tenant" => tenant}}) do
     alias Xomium.Google.Api.{
       DriveError,
       Drive,
@@ -26,8 +26,17 @@ defmodule Xomium.Worker.ListUserFiles do
 
     # TODO Rate limiting
 
-    with {:ok, _files, next_page_token} <- Drive.files(conf, account, page_token) do
-      # TODO Save files in db
+    with {:ok, files, next_page_token} <- Drive.files(conf, account, page_token) do
+      Enum.each(files, fn file ->
+        Xomium.Google.File.create_file(tenant, %{
+          id: file["id"],
+          name: file["name"],
+          web_view_link: file["webViewLink"],
+          shared: file["shared"],
+          writers_can_share: file["writersCanShare"]
+        })
+      end)
+
       case next_page_token do
         nil ->
           Logger.debug("End of files pages for #{account}")

@@ -11,7 +11,8 @@ defmodule Xomium.Worker.ListFiles do
     |> Enum.each(fn user ->
       %{
         "account" => user.primary_email,
-        "conf" => conf
+        "conf" => conf,
+        "tenant" => tenant
       }
       |> Xomium.Worker.ListUserFiles.new()
       |> Oban.insert()
