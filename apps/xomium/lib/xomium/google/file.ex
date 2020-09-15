@@ -5,7 +5,7 @@ defmodule Xomium.Google.File do
 
   use Ecto.Schema
 
-  @primary_key {:id, :binary_id, autogenerate: false}
+  @primary_key {:id, :string, autogenerate: false}
   schema "files" do
     field(:name, :string)
     field(:web_view_link, :string)
