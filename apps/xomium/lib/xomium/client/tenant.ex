@@ -33,28 +33,21 @@ defmodule Xomium.Client.Tenant do
 
   @spec create_tenant(struct()) :: {:ok, binary()} | {:error, any()}
   def create_tenant(client) when is_struct(client) do
-    alias Xomium.Client
-
     prefix = make_prefix(client.id)
 
     with {:ok, _} <- create_schema(prefix),
-         {:ok, _client} <- Client.update_client(client, %{tenant: prefix}),
-         :ok <- create_users_table(prefix) do
+         :ok <- create_users_table(prefix),
+         :ok <- create_files_table(prefix) do
       Logger.info("Created tenant \"#{prefix}\"")
       {:ok, prefix}
     end
   end
 
-  @spec delete_tenant(non_neg_integer()) :: :ok | {:error, any}
-  def delete_tenant(client_id) when is_integer(client_id) do
-    import Ecto.Query
-
-    from(t in "tenants", where: t.client_id == ^client_id)
-    |> Xomium.Repo.delete_all()
-
+  @spec delete_tenant(struct()) :: :ok | {:error, any()}
+  def delete_tenant(client) when is_struct(client) do
     Ecto.Adapters.SQL.query(
       Xomium.Repo,
-      "DROP SCHEMA \"#{make_prefix(client_id)}\" CASCADE"
+      "DROP SCHEMA \"#{make_prefix(client.id)}\" CASCADE"
     )
   end
 

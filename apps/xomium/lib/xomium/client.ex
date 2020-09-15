@@ -40,9 +40,20 @@ defmodule Xomium.Client do
 
   @spec create_client(map()) :: {:ok, struct()} | {:error, struct()}
   def create_client(attrs \\ %{}) do
-    %__MODULE__{}
-    |> changeset(attrs)
-    |> Xomium.Repo.insert()
+    {:ok, client} =
+      %__MODULE__{}
+      |> changeset(attrs)
+      |> Xomium.Repo.insert()
+
+    {:ok, tenant} = Xomium.Client.Tenant.create_tenant(client)
+
+    update_client(client, %{tenant: tenant})
+  end
+
+  @spec delete_client(struct()) :: :ok | {:error, any()}
+  def delete_client(client) do
+    Xomium.Client.Tenant.delete_tenant(client)
+    Xomium.Repo.delete(client)
   end
 
   def update_client(client = %__MODULE__{}, attrs) do

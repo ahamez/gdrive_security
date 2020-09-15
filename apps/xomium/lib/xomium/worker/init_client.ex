@@ -38,18 +38,16 @@ defmodule Xomium.Worker.InitClient do
   end
 
   defp init(args = %{"admin_account" => admin, "conf" => conf, "domain" => domain}) do
-    with {:ok, client = %Client{id: client_id}} <-
-           Client.create_client(%{client_name: domain, platform: %{}}),
-         {:ok, tenant} <- Client.Tenant.create_tenant(client) do
+    with {:ok, client} <- Client.create_client(%{client_name: domain, platform: %{}}) do
       next_args =
         args
         |> Map.put("state", "list_users")
-        |> Map.put("client_id", client_id)
-        |> Map.put("tenant", tenant)
+        |> Map.put("client_id", client.id)
+        |> Map.put("tenant", client.tenant)
 
       %{
         "admin_account" => admin,
-        "client_id" => client_id,
+        "client_id" => client.id,
         "conf" => conf,
         "domain" => domain,
         "next_worker" => __MODULE__,
