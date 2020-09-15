@@ -68,8 +68,18 @@ defmodule Xomium.Client.Tenant do
   defp create_users_table(prefix) do
     Ecto.Migrator.up(
       Xomium.Repo,
-      Xomium.Migrations.CreateGoogleTenantUserTable.version(),
-      Xomium.Migrations.CreateGoogleTenantUserTable,
+      Xomium.Migrations.CreateUserTable.version(),
+      Xomium.Migrations.CreateUserTable,
+      prefix: prefix,
+      all: true
+    )
+  end
+
+  defp create_files_table(prefix) do
+    Ecto.Migrator.up(
+      Xomium.Repo,
+      Xomium.Migrations.CreateFilesTable.version(),
+      Xomium.Migrations.CreateFilesTable,
       prefix: prefix,
       all: true
     )
