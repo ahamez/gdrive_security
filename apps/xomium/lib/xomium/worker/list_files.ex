@@ -5,8 +5,8 @@ defmodule Xomium.Worker.ListFiles do
     queue: :client_management
 
   @impl true
-  def perform(%Oban.Job{args: %{"conf" => conf, "prefix" => prefix}}) do
-    prefix
+  def perform(%Oban.Job{args: %{"conf" => conf, "tenant" => tenant}}) do
+    tenant
     |> Xomium.Google.User.list_users()
     |> Enum.each(fn user ->
       %{

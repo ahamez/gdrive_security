@@ -1,4 +1,4 @@
-defmodule Xomium.Migrations.CreateTenantUserTable do
+defmodule Xomium.Migrations.CreateGoogleTenantUserTable do
   @moduledoc false
 
   use Ecto.Migration

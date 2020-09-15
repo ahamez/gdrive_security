@@ -3,13 +3,13 @@ defmodule Xomium.Repo.Migrations.CreateClients do
 
   def change do
     create table(:clients) do
-      add(:client, :string, null: false)
-      add(:google_customer_id, :string, null: false)
+      add(:client_name, :string, null: false)
+      add(:platform, :map, null: false)
+      add(:tenant, :string)
 
       timestamps()
     end
 
-    create(unique_index(:clients, [:client]))
-    create(unique_index(:clients, [:google_customer_id]))
+    create(unique_index(:clients, [:client_name]))
   end
 end

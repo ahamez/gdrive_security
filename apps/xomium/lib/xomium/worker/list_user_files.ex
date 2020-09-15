@@ -64,6 +64,7 @@ defmodule Xomium.Worker.ListUserFiles do
     end
   end
 
+  # TODO: all http workers should have the same backoff function
   @impl Oban.Worker
   def backoff(%Oban.Job{attempt: attempt}) do
     trunc(:math.pow(attempt, 2) + 15 + :rand.uniform(30) * attempt)

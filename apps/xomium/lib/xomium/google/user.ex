@@ -24,8 +24,15 @@ defmodule Xomium.Google.User do
     |> unique_constraint(:primary_email)
   end
 
+  @spec create_user(binary(), map()) :: {:ok, struct()} | {:error, struct()}
+  def create_user(tenant, attrs \\ %{}) do
+    %__MODULE__{}
+    |> changeset(attrs)
+    |> Xomium.Repo.insert(prefix: tenant, on_conflict: :nothing)
+  end
+
   @spec list_users(binary()) :: [struct()]
-  def list_users(prefix) when is_binary(prefix) do
-    Xomium.Repo.all(__MODULE__, prefix: prefix)
+  def list_users(tenant) when is_binary(tenant) do
+    Xomium.Repo.all(__MODULE__, prefix: tenant)
   end
 end

@@ -23,7 +23,7 @@ defmodule Xomium.Worker.ListUsers do
             "customer_id" => customer_id,
             "next_worker" => next_worker,
             "next_args" => next_args,
-            "prefix" => prefix
+            "tenant" => tenant
           }
       }) do
     page_token = args["pageToken"]
@@ -35,17 +35,7 @@ defmodule Xomium.Worker.ListUsers do
 
     with {:ok, users, next_page_token} <-
            Directory.users(conf, {:customer_id, customer_id}, admin, page_token: page_token) do
-      Enum.each(users, fn user ->
-        user = %{
-          google_id: user["id"],
-          primary_email: user["primaryEmail"]
-        }
-
-        # TODO Bulk insert
-        %Xomium.Google.User{}
-        |> Xomium.Google.User.changeset(user)
-        |> Xomium.Repo.insert(prefix: prefix)
-      end)
+      insert_users(tenant, users)
 
       case next_page_token do
         nil ->
@@ -72,5 +62,14 @@ defmodule Xomium.Worker.ListUsers do
         Logger.warn("#{inspect(error)}")
         {:error, error}
     end
+  end
+
+  defp insert_users(tenant, users) do
+    Enum.each(users, fn user ->
+      Xomium.Google.User.create_user(tenant, %{
+        google_id: user["id"],
+        primary_email: user["primaryEmail"]
+      })
+    end)
   end
 end

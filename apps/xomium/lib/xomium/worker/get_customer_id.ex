@@ -13,27 +13,19 @@ defmodule Xomium.Worker.GetCustomerId do
 
   @impl Oban.Worker
   def perform(%Oban.Job{
-        args:
-          args = %{
-            "admin_account" => admin,
-            "conf" => conf,
-            "domain" => domain,
-            "next_worker" => next_worker,
-            "next_args" => next_args,
-            "prefix" => prefix
-          }
+        args: %{
+          "admin_account" => admin,
+          "client_id" => client_id,
+          "conf" => conf,
+          "domain" => domain,
+          "next_worker" => next_worker,
+          "next_args" => next_args
+        }
       }) do
-    alias Xomium.Google.{
-      Directory,
-      DirectoryApiError
-    }
-
-    with {:ok, users, _next_page_token} <-
-           Directory.users(conf, {:domain, domain}, admin, max_results: 1, fields: ["customerId"]) do
-      # TODO register this Google customer id in a client DB
-
-      [%{"customerId" => customer_id}] = users
-      Logger.debug("Got CustomerId #{customer_id} for #{domain}")
+    with {:ok, user} <- fetch_one_user(conf, domain, admin),
+         {:ok, customer_id} <- get_customer_id(user),
+         {:ok, _client} <- update_customer_id(client_id, customer_id) do
+      Logger.debug("Got CustomerId #{customer_id} for domain #{domain}")
 
       module = String.to_atom(next_worker)
 
@@ -41,45 +33,29 @@ defmodule Xomium.Worker.GetCustomerId do
       |> module.new()
       |> Oban.insert()
     end
+  end
 
-    #   Enum.each(users, fn user ->
-    #     user = %{
-    #       google_id: user["id"],
-    #       primary_email: user["primaryEmail"]
-    #     }
+  defp fetch_one_user(conf, domain, admin) do
+    alias Xomium.Google.Directory
 
-    #     # TODO Bulk insert
-    #     %Xomium.Google.User{}
-    #     |> Xomium.Google.User.changeset(user)
-    #     |> Xomium.Repo.insert(prefix: prefix)
-    #   end)
+    with {:ok, [user], _next_page_token} <-
+           Directory.users(conf, {:domain, domain}, admin, max_results: 1, fields: ["customerId"]) do
+      {:ok, user}
+    end
+  end
 
-    #   case next_page_token do
-    #     nil ->
-    #       Logger.debug("End of users pages for #{domain}")
-    #       Logger.debug("End of users pages for #{domain}")
-    #       Logger.debug("End of users pages for #{domain}")
+  defp get_customer_id(%{"customerId" => customer_id}) do
+    {:ok, customer_id}
+  end
 
-    module = String.to_atom(next_worker)
+  defp get_customer_id(_) do
+    {:error, :no_customer_id}
+  end
 
-    next_args
-    |> module.new()
-    |> Oban.insert()
+  def update_customer_id(client_id, customer_id) do
+    alias Xomium.Client
 
-    #     _ ->
-    #       args
-    #       |> Map.put(:page_token, next_page_token)
-    #       |> Xomium.Worker.ListUsers.new()
-    #       |> Oban.insert()
-    #   end
-    # else
-    #   {:error, error = %DirectoryApiError{}} ->
-    #     Logger.warn(Exception.message(error))
-    #     {:error, error}
-
-    #   {:error, error} ->
-    #     Logger.warn("#{inspect(error)}")
-    #     {:error, error}
-    # end
+    client = Client.get_client(client_id)
+    Client.update_client(client, %{platform: %{"customer_id" => customer_id}})
   end
 end
