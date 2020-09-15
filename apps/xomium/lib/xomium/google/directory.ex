@@ -98,7 +98,7 @@ defmodule Xomium.Google.Directory do
   end
 
   defp add_domain_or_customer_id(params, {:customer_id, customer_id}) do
-    Map.put(params, "customerId", customer_id)
+    Map.put(params, "customer", customer_id)
   end
 
   defp add_fields_filter(params, fields) do
