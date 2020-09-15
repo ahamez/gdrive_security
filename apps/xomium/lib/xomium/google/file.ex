@@ -5,17 +5,8 @@ defmodule Xomium.Google.File do
 
   use Ecto.Schema
 
-  @primary_key {:id, :string, autogenerate: false}
+  @primary_key {:id, :binary_id, autogenerate: false}
   schema "files" do
-    # "id",
-    # "name",
-    # "owners(emailAddress)",
-    # "permissions(type,emailAddress)",
-    # "parents",
-    # "webViewLink",
-    # "shared",
-    # "writersCanShare"
-
     field(:name, :string)
     field(:web_view_link, :string)
     field(:shared, :boolean)
@@ -24,19 +15,27 @@ defmodule Xomium.Google.File do
     timestamps()
   end
 
-  def changeset(user = %__MODULE__{}, params \\ %{}) do
+  def changeset(file = %__MODULE__{}, params \\ %{}) do
     import Ecto.Changeset
 
-    # user
-    # |> cast(params, [:google_id, :primary_email])
-    # |> validate_required(:google_id)
-    # |> unique_constraint(:google_id)
-    # |> validate_required(:primary_email)
-    # |> unique_constraint(:primary_email)
+    file
+    |> cast(params, [:id, :name, :web_view_link, :shared, :writers_can_share])
+    |> unique_constraint(:id)
+    |> validate_required(:name)
+    |> validate_required(:web_view_link)
+    |> validate_required(:shared)
+    |> validate_required(:writers_can_share)
+  end
+
+  @spec create_file(binary(), map()) :: {:ok, struct()} | {:error, struct()}
+  def create_file(tenant, attrs \\ %{}) do
+    %__MODULE__{}
+    |> changeset(attrs)
+    |> Xomium.Repo.insert(prefix: tenant, on_conflict: :nothing)
   end
 
   @spec list_files(binary()) :: [struct()]
-  def list_files(prefix) when is_binary(prefix) do
-    Xomium.Repo.all(__MODULE__, prefix: prefix)
+  def list_files(tenant) when is_binary(tenant) do
+    Xomium.Repo.all(__MODULE__, prefix: tenant)
   end
 end
