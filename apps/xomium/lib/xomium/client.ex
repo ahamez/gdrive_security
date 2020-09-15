@@ -33,6 +33,11 @@ defmodule Xomium.Client do
     Xomium.Repo.get(__MODULE__, id)
   end
 
+  @spec get_client_by(map()) :: struct() | nil
+  def get_client_by(params) do
+    Xomium.Repo.get_by(__MODULE__, params)
+  end
+
   @spec create_client(map()) :: {:ok, struct()} | {:error, struct()}
   def create_client(attrs \\ %{}) do
     %__MODULE__{}
