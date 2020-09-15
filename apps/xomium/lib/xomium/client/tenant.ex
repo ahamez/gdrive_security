@@ -31,7 +31,7 @@ defmodule Xomium.Client.Tenant do
     end
   end
 
-  @spec create_tenant(struct()) :: {:ok, binary()} | {:error, any}
+  @spec create_tenant(struct()) :: {:ok, binary()} | {:error, any()}
   def create_tenant(client) when is_struct(client) do
     alias Xomium.Client
 
