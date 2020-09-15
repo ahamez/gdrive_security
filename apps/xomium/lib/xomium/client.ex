@@ -4,6 +4,7 @@ defmodule Xomium.Client do
   use Ecto.Schema
 
   @schema_prefix "public"
+  @primary_key {:id, :binary_id, autogenerate: true}
   schema "clients" do
     field(:client_name, :string)
     field(:platform, :map)
