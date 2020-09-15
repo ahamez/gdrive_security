@@ -1,4 +1,4 @@
-defmodule Xomium.Google.OauthApiError do
+defmodule Xomium.Google.Api.OauthError do
   @moduledoc """
   https://developers.google.com/identity/protocols/oauth2/service-account
   """

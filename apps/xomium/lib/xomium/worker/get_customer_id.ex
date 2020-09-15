@@ -36,7 +36,7 @@ defmodule Xomium.Worker.GetCustomerId do
   end
 
   defp fetch_one_user(conf, domain, admin) do
-    alias Xomium.Google.Directory
+    alias Xomium.Google.Api.Directory
 
     with {:ok, [user], _next_page_token} <-
            Directory.users(conf, {:domain, domain}, admin, max_results: 1, fields: ["customerId"]) do

@@ -16,10 +16,10 @@ defmodule Xomium.Worker.ListUserFiles do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: args = %{"account" => account, "conf" => conf}}) do
-    alias Xomium.Google.{
-      DriveApiError,
+    alias Xomium.Google.Api.{
+      DriveError,
       Drive,
-      OauthApiError
+      OauthError
     }
 
     page_token = args["page_token"]
@@ -40,21 +40,21 @@ defmodule Xomium.Worker.ListUserFiles do
           |> Oban.insert()
       end
     else
-      {:error, error = %DriveApiError{reason: {status, _}}}
+      {:error, error = %DriveError{reason: {status, _}}}
       when status in [:not_found, :bad_request] ->
         Logger.error(Exception.message(error))
         {:discard, error}
 
-      {:error, error = %DriveApiError{reason: {:unauthorized, :auth_error}}} ->
+      {:error, error = %DriveError{reason: {:unauthorized, :auth_error}}} ->
         Logger.warn("Authentication error for #{account}. Resetting access token.")
-        :ok = Xomium.Google.AccessToken.delete(account)
+        :ok = Xomium.Google.Api.AccessToken.delete(account)
         {:error, error}
 
-      {:error, error = %OauthApiError{reason: :invalid_email_or_user_id}} ->
+      {:error, error = %OauthError{reason: :invalid_email_or_user_id}} ->
         Logger.error("Invalid account #{account}")
         {:discard, error}
 
-      {:error, error = %OauthApiError{reason: :invalid_signature}} ->
+      {:error, error = %OauthError{reason: :invalid_signature}} ->
         Logger.error("Invalid private key")
         {:discard, error}
 

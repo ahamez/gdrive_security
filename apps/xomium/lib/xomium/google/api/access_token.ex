@@ -1,4 +1,4 @@
-defmodule Xomium.Google.AccessToken do
+defmodule Xomium.Google.Api.AccessToken do
   @moduledoc """
   https://developers.google.com/identity/protocols/oauth2/service-account
   """
@@ -63,7 +63,7 @@ defmodule Xomium.Google.AccessToken do
   defp make_query(secret_key, issuer, sub) do
     URI.encode_query(%{
       "grant_type" => "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      "assertion" => Xomium.Google.Jwt.make(secret_key, issuer, @scopes, @ttl, sub)
+      "assertion" => Xomium.Google.Api.Jwt.make(secret_key, issuer, @scopes, @ttl, sub)
     })
   end
 
@@ -83,7 +83,7 @@ defmodule Xomium.Google.AccessToken do
         {:ok, access_token}
 
       :error ->
-        {:error, Xomium.Google.OauthApiError.new(json)}
+        {:error, Xomium.Google.Api.OauthError.new(json)}
     end
   end
 end

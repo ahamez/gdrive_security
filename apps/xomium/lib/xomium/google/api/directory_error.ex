@@ -1,7 +1,5 @@
-defmodule Xomium.Google.DriveApiError do
-  @moduledoc """
-  https://developers.google.com/drive/api/v3/handle-errors
-  """
+defmodule Xomium.Google.Api.DirectoryError do
+  @moduledoc false
 
   @type t() :: %__MODULE__{
           reason: any(),
@@ -33,23 +31,14 @@ defmodule Xomium.Google.DriveApiError do
   defp status_to_atom(429), do: :too_many_requests
   defp status_to_atom(500), do: :internal_server_error
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp reason_text_to_atom(%{"error" => %{"errors" => [%{"reason" => reason}]}}) do
     case reason do
-      "authError" -> :auth_error
-      "backendError" -> :backend_error
+      "forbidden" -> :forbidden
       "dailyLimitExceeded" -> :daily_limit_exceeded
-      "dailyLimitExceededUnreg" -> :daily_limit_exceeded_unreg
-      "internalError" -> :internal_error
-      "invalid" -> :invalid
-      "invalidParameter" -> :invalid_parameter
-      "rateLimitExceeded" -> :rate_limit_exceeded
       "userRateLimitExceeded" -> :user_rate_limit_exceeded
+      "quotaExceeded" -> :quota_exceeded
+      "rateLimitExceeded" -> :rate_limit_exceeded
       _ -> :unknown
     end
-  end
-
-  defp reason_text_to_atom(_) do
-    :unknown
   end
 end

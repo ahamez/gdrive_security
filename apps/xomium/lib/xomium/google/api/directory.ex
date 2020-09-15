@@ -1,4 +1,4 @@
-defmodule Xomium.Google.Directory do
+defmodule Xomium.Google.Api.Directory do
   @moduledoc """
   https://developers.google.com/admin-sdk/directory/v1/reference/users?authuser=1#resource
   """
@@ -29,7 +29,7 @@ defmodule Xomium.Google.Directory do
   end
 
   defp load_page(conf, domain_or_customer_id, admin_account, page_token, max_results, fields) do
-    with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(conf, admin_account),
+    with {:ok, bearer_token} <- Xomium.Google.Api.AccessToken.get(conf, admin_account),
          {:ok, data} <-
            call_directory_api(
              conf,
@@ -75,7 +75,7 @@ defmodule Xomium.Google.Directory do
           {:ok, data}
 
         {:ok, %{data: data}} ->
-          {:error, Xomium.Google.DirectoryApiError.new(data)}
+          {:error, Xomium.Google.Api.DirectoryError.new(data)}
 
         {:error, reason} ->
           {:error, reason}

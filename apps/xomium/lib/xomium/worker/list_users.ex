@@ -28,9 +28,9 @@ defmodule Xomium.Worker.ListUsers do
       }) do
     page_token = args["pageToken"]
 
-    alias Xomium.Google.{
+    alias Xomium.Google.Api.{
       Directory,
-      DirectoryApiError
+      DirectoryError
     }
 
     with {:ok, users, next_page_token} <-
@@ -54,7 +54,7 @@ defmodule Xomium.Worker.ListUsers do
           |> Oban.insert()
       end
     else
-      {:error, error = %DirectoryApiError{}} ->
+      {:error, error = %DirectoryError{}} ->
         Logger.warn(Exception.message(error))
         {:error, error}
 

@@ -1,4 +1,4 @@
-defmodule Xomium.Google.Drive do
+defmodule Xomium.Google.Api.Drive do
   @moduledoc """
   https://developers.google.com/drive/api/v3/reference/files/list
   """
@@ -40,7 +40,7 @@ defmodule Xomium.Google.Drive do
   end
 
   defp load_page(conf, account, page_token) do
-    with {:ok, bearer_token} <- Xomium.Google.AccessToken.get(conf, account),
+    with {:ok, bearer_token} <- Xomium.Google.Api.AccessToken.get(conf, account),
          {:ok, data} <- call_drive_api(conf, page_token, bearer_token),
          {:ok, json} <- Jason.decode(data) do
       files = json["files"] || []
@@ -69,7 +69,7 @@ defmodule Xomium.Google.Drive do
           {:ok, data}
 
         {:ok, %{data: data}} ->
-          {:error, Xomium.Google.DriveApiError.new(data)}
+          {:error, Xomium.Google.Api.DriveError.new(data)}
 
         {:error, reason} ->
           {:error, reason}

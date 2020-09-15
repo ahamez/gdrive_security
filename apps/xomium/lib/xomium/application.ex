@@ -12,7 +12,7 @@ defmodule Xomium.Application do
       {Phoenix.PubSub, [name: Xomium.PubSub]},
       Xomium.Repo,
       {Xomium.Secrets, [name: :secrets, conf: conf]},
-      Xomium.Google.AccessToken
+      Xomium.Google.Api.AccessToken
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Xomium.Supervisor)
