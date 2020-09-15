@@ -28,7 +28,7 @@ defmodule Xomium.Client do
     Xomium.Repo.all(__MODULE__)
   end
 
-  @spec get_client(non_neg_integer()) :: struct()
+  @spec get_client(binary()) :: struct()
   def get_client(id) do
     Xomium.Repo.get(__MODULE__, id)
   end
