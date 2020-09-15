@@ -35,7 +35,13 @@ defmodule Xomium.Google.File do
   end
 
   @spec list_files(binary()) :: [struct()]
-  def list_files(tenant) when is_binary(tenant) do
+  def list_files(tenant) do
     Xomium.Repo.all(__MODULE__, prefix: tenant)
+  end
+
+  @spec count_files(binary()) :: non_neg_integer()
+  def count_files(tenant) do
+    import Ecto.Query
+    Xomium.Repo.aggregate(from(f in "files"), :count, prefix: tenant)
   end
 end
