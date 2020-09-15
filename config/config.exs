@@ -6,6 +6,8 @@ import Config
 config :xomium,
   ecto_repos: [Xomium.Repo]
 
+config :xomium, Xomium.Repo, log: false
+
 config :xomium,
   google_secret_pem_path:
     {:env, "XOMIUM_GOOGLE_SECRET_PEM_PATH", [type: :string, required: true]},
