@@ -45,6 +45,7 @@ defmodule Xomium.Google.Api.Drive do
          {:ok, json} <- Jason.decode(data) do
       files = json["files"] || []
       :telemetry.execute([:xomium, :google, :drive, :load_page], %{files: length(files)})
+
       {:ok, files, json["nextPageToken"]}
     end
   end

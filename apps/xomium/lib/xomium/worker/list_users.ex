@@ -49,7 +49,7 @@ defmodule Xomium.Worker.ListUsers do
 
         _ ->
           args
-          |> Map.put(:page_token, next_page_token)
+          |> Map.put("page_token", next_page_token)
           |> Xomium.Worker.ListUsers.new()
           |> Oban.insert()
       end
