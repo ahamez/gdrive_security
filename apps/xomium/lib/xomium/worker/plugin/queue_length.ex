@@ -1,6 +1,7 @@
 defmodule Xomium.Worker.Plugin.QueueLength do
   @moduledoc """
   https://blog.softwarecurmudgeon.com/oban-plugins
+  https://github.com/sorentwo/oban/blob/master/guides/writing_plugins.md
   """
 
   use GenServer
