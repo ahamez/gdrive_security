@@ -20,6 +20,7 @@ defmodule Xomium.Google.File do
 
     file
     |> cast(params, [:id, :name, :web_view_link, :shared, :writers_can_share])
+    |> validate_required(:id)
     |> unique_constraint(:id)
     |> validate_required(:name)
     |> validate_required(:web_view_link)
