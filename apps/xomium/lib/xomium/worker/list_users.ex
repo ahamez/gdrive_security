@@ -67,7 +67,7 @@ defmodule Xomium.Worker.ListUsers do
   defp insert_users(tenant, users) do
     Enum.each(users, fn user ->
       Xomium.Google.User.create_user(tenant, %{
-        google_id: user["id"],
+        id: user["id"],
         primary_email: user["primaryEmail"]
       })
     end)

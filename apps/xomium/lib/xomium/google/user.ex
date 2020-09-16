@@ -5,8 +5,8 @@ defmodule Xomium.Google.User do
 
   use Ecto.Schema
 
+  @primary_key {:id, :string, autogenerate: false}
   schema "users" do
-    field(:google_id, :string)
     field(:primary_email, :string)
     field(:deleted, :boolean)
 
@@ -17,9 +17,9 @@ defmodule Xomium.Google.User do
     import Ecto.Changeset
 
     user
-    |> cast(params, [:google_id, :primary_email])
-    |> validate_required(:google_id)
-    |> unique_constraint(:google_id)
+    |> cast(params, [:id, :primary_email])
+    |> validate_required(:id)
+    |> unique_constraint(:id)
     |> validate_required(:primary_email)
     |> unique_constraint(:primary_email)
   end

@@ -4,15 +4,14 @@ defmodule Xomium.Migrations.CreateUserTable do
   use Ecto.Migration
 
   def change() do
-    create table(:users, prefix: prefix()) do
-      add(:google_id, :string, null: false)
+    create table(:users, primary_key: false, prefix: prefix()) do
+      add(:id, :string, primary_key: true)
       add(:primary_email, :string, null: false)
       add(:deleted, :boolean, null: false, default: false)
 
       timestamps()
     end
 
-    create(unique_index(:users, [:google_id]))
     create(unique_index(:users, [:primary_email]))
   end
 
