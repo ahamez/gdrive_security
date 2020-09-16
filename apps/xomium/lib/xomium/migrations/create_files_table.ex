@@ -4,7 +4,7 @@ defmodule Xomium.Migrations.CreateFilesTable do
   use Ecto.Migration
 
   def change do
-    create table(:files, primary_key: false) do
+    create table(:files, primary_key: false, prefix: prefix()) do
       add(:id, :string, primary_key: true)
       add(:name, :string, null: false)
       add(:web_view_link, :string, null: false)
