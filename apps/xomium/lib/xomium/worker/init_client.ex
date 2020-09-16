@@ -71,7 +71,7 @@ defmodule Xomium.Worker.InitClient do
       |> Map.put("state", "list_files")
       |> Map.put("tenant", tenant)
 
-    customer_id = Client.get_client(client_id).platform["customer_id"]
+    customer_id = Client.get_client(client_id).platform["google"]["customer_id"]
 
     %{
       "admin_account" => admin,

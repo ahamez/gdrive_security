@@ -56,6 +56,6 @@ defmodule Xomium.Worker.GetCustomerId do
     alias Xomium.Client
 
     client = Client.get_client(client_id)
-    Client.update_client(client, %{platform: %{"customer_id" => customer_id}})
+    Client.update_client(client, %{platform: %{"google" => %{"customer_id" => customer_id}}})
   end
 end
