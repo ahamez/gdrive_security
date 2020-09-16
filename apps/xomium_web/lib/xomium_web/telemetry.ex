@@ -38,9 +38,17 @@ defmodule XomiumWeb.Telemetry do
       summary("xomium.repo.query.query_time", unit: {:native, :millisecond}),
       summary("xomium.repo.query.queue_time", unit: {:native, :millisecond}),
       summary("xomium.repo.query.idle_time", unit: {:native, :millisecond}),
+
+      # Xomium custom metrics
       summary("xomium.google.drive.call_drive_api.time", unit: :second),
       summary("xomium.google.drive.load_page.files"),
       counter("xomium.google.drive.requests"),
+
+      # Oban metrics
+      summary("oban.queue_stats.http_requests.completed"),
+      summary("oban.queue_stats.http_requests.executing"),
+      summary("oban.queue_stats.client_management.completed"),
+      summary("oban.queue_stats.client_management.executing"),
 
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),

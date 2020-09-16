@@ -18,7 +18,10 @@ config :xomium,
 config :xomium, Oban,
   repo: Xomium.Repo,
   prefix: "jobs",
-  plugins: [Oban.Plugins.Pruner],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Xomium.Worker.Plugin.QueueLength, interval: :timer.seconds(5)}
+  ],
   queues: [
     http_requests: 50,
     client_management: 10
