@@ -38,6 +38,7 @@ defmodule Xomium.Worker.InitClient do
   end
 
   defp init(args = %{"admin_account" => admin, "conf" => conf, "domain" => domain}) do
+    # TODO Don't fail if client already exists, just launch listing of users and files.
     with {:ok, client} <- Client.create_client(%{name: domain, platform: %{}}) do
       next_args =
         args

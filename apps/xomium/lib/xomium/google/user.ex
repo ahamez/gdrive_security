@@ -35,4 +35,7 @@ defmodule Xomium.Google.User do
   def list_users(tenant) when is_binary(tenant) do
     Xomium.Repo.all(__MODULE__, prefix: tenant)
   end
+
+  # TODO def update_user(), implemented as an upsert where the new value is always kept.
+  # Will be used by webhooks.
 end

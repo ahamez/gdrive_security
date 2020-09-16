@@ -45,4 +45,7 @@ defmodule Xomium.Google.File do
     import Ecto.Query
     Xomium.Repo.aggregate(from(f in "files"), :count, prefix: tenant)
   end
+
+  # TODO def update_file(), implemented as an upsert where the new value is always kept.
+  # Will be used by webhooks.
 end
