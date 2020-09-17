@@ -30,6 +30,8 @@ defmodule Xomium.MintHttp do
   end
 
   defp request(method, url, path, headers, body, opts) do
+    headers = [{"accept-encoding", "gzip"}, "user-agent", "xomium (gzip)" | headers]
+
     {timeout, opts} = Keyword.pop(opts, :timeout, :infinity)
     {protocol, _} = Keyword.pop(opts, :protocol, :http2)
 
@@ -43,9 +45,17 @@ defmodule Xomium.MintHttp do
   defp recv(acc, conn, timeout) do
     with {:ok, conn, responses} <- Mint.HTTP.recv(conn, 0, timeout) do
       case Enum.reduce(responses, acc, &handle_response/2) do
-        {:done, acc} -> {:ok, acc}
-        {:error, reason} -> {:error, reason}
-        acc -> recv(acc, conn, timeout)
+        {:done, acc} ->
+          compression_algorithms = get_content_encoding_header(acc.headers)
+          response = update_in(acc.data, &decompress_data(&1, compression_algorithms))
+
+          {:ok, response}
+
+        {:error, reason} ->
+          {:error, reason}
+
+        acc ->
+          recv(acc, conn, timeout)
       end
     end
   end
@@ -68,5 +78,35 @@ defmodule Xomium.MintHttp do
 
   defp handle_response({:error, _request_ref, reason}, _acc) do
     {:error, reason}
+  end
+
+  defp decompress_data(data, algorithms) do
+    Enum.reduce(algorithms, data, &decompress_with_algorithm/2)
+  end
+
+  defp decompress_with_algorithm(gzip, data) when gzip in ["gzip", "x-gzip"],
+    do: :zlib.gunzip(data)
+
+  defp decompress_with_algorithm("deflate", data),
+    do: :zlib.unzip(data)
+
+  defp decompress_with_algorithm("identity", data),
+    do: data
+
+  defp decompress_with_algorithm(algorithm, _data),
+    do: raise("unsupported decompression algorithm: #{inspect(algorithm)}")
+
+  defp get_content_encoding_header(headers) do
+    Enum.find_value(headers, [], fn {name, value} ->
+      if String.downcase(name) == "content-encoding" do
+        value
+        |> String.downcase()
+        |> String.split(",", trim: true)
+        |> Stream.map(&String.trim/1)
+        |> Enum.reverse()
+      else
+        nil
+      end
+    end)
   end
 end
