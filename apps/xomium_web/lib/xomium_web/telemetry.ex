@@ -41,8 +41,6 @@ defmodule XomiumWeb.Telemetry do
 
       # Xomium custom metrics
       summary("xomium.google.drive.call_drive_api.time", unit: :second),
-      summary("xomium.google.drive.load_page.files"),
-      counter("xomium.google.drive.requests"),
 
       # Oban metrics
       summary("oban.queue_stats.http_requests.completed"),
