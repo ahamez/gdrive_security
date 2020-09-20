@@ -36,6 +36,16 @@ defmodule Xomium.Google.User do
     Xomium.Repo.all(__MODULE__, prefix: tenant)
   end
 
+  @spec get_user(binary(), binary()) :: struct() | nil
+  def get_user(tenant, id) do
+    Xomium.Repo.get(__MODULE__, id, prefix: tenant)
+  end
+
+  @spec get_user_by(binary(), map()) :: struct() | nil
+  def get_user_by(tenant, params) do
+    Xomium.Repo.get_by(__MODULE__, params, prefix: tenant)
+  end
+
   # TODO def update_user(), implemented as an upsert where the new value is always kept.
   # Will be used by webhooks.
 end
