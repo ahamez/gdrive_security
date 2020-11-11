@@ -87,11 +87,13 @@ defmodule Xomium.Google.Api.Drive do
   defp add_visibility_filter(params) do
     # TODO Check if this cover files shared with an address that is external
     # to the domain
-    filter = ~w[
+    filter =
+      ~w[
       visibility='anyoneCanFind'
       or
       visibility='anyoneWithLink'
-    ] |> Enum.join(" ")
+    ]
+      |> Enum.join(" ")
 
     Map.put(params, "q", filter)
   end
